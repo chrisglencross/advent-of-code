@@ -1,27 +1,50 @@
-import copy
-from statistics import mode
-
-with open("input", "r") as f:
-    lines = f.readlines()
-
-coords = []
-for line in lines:
-    vals = line.split(",")
-    coords.append(tuple([int(vals[0]), int(vals[1])]))
-
-min_x = min(coords, key=lambda coord: coord[0])[0]-1
-max_x = max(coords, key=lambda coord: coord[0])[0]+1
-min_y = min(coords, key=lambda coord: coord[1])[1]-1
-max_y = max(coords, key=lambda coord: coord[1])[1]+1
-
-count = 0
-for y in range(min_y, max_y+1):
-    row = []
-    for x in range(min_x, max_x+1):
-        total = 0
-        for coord in coords:
-            total = total + abs(coord[0]-x) + abs(coord[1]-y)
-        if total < 10000:
-            count = count +1
-
-print(count)
+135, 127
+251, 77
+136, 244
+123, 169
+253, 257
+359, 309
+100, 247
+191, 323
+129, 323
+76, 284
+69, 56
+229, 266
+74, 216
+236, 130
+152, 126
+174, 319
+315, 105
+329, 146
+288, 51
+184, 344
+173, 69
+293, 80
+230, 270
+279, 84
+107, 163
+130, 176
+347, 114
+133, 331
+237, 300
+291, 283
+246, 297
+60, 359
+312, 278
+242, 76
+81, 356
+204, 291
+187, 335
+176, 98
+103, 274
+357, 144
+314, 118
+67, 196
+156, 265
+254, 357
+218, 271
+118, 94
+300, 189
+290, 356
+354, 91
+209, 334
