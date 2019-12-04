@@ -18,7 +18,7 @@ for i in range(123257, 647016):
 
     contains_pair = False
     for c, consecutive_chars in itertools.groupby(password):
-        if len(list(consecutive_chars)) == 2:
+        if len(list(consecutive_chars)) == 2:  # >=2 for part 1
             contains_pair = True
 
     if increase and contains_pair:
