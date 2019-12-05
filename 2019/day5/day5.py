@@ -103,15 +103,19 @@ class Program:
         return self.memory[self.pc] == 99
 
     def tick(self):
+
+        # Decode opcode and argument modes
         opcode = self.memory[self.pc]
         mode1 = (opcode // 100) % 10
         mode2 = (opcode // 1000) % 10
         mode3 = (opcode // 10000) % 10
         opcode = opcode % 10
+
+        # Terminate
         if opcode == 99:
             return False
 
-        # Find the operation
+        # Find the operation implementation
         op = [op_code for op_code in OP_CODES if op_code.code == opcode]
         if not op:
             raise Exception(f"Unsupported opcode {opcode}")
@@ -133,12 +137,16 @@ class Program:
         if self.debug:
             print(f"@{self.pc} {op.name} {args[1:]}\t=> {', '.join([f'@{k}={v}' for k, v in result.update.items()])}")
 
+        # Apply updates
         for addr, value in result.update.items():
             self.memory[addr] = value
+
+        # Update program counter
         if result.jump:
             self.pc = result.jump
         else:
             self.pc = self.pc + op.size
+
         return True
 
 
