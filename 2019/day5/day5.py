@@ -10,6 +10,7 @@ OP_CODES = list()
 @dataclass
 class OpResult:
     update: Dict[int, int] = field(default_factory=dict)
+    output: int = None
     jump: int = None
 
 
@@ -47,8 +48,7 @@ def op_input(program, target_addr):
 
 @opcode(code=4, size=2)
 def op_output(program, a1):
-    program.output.append(a1)
-    return OpResult(update={})
+    return OpResult(output=a1)
 
 
 @opcode(code=5, size=3)
@@ -94,7 +94,7 @@ class Program:
     input: List[int] = field(default_factory=list)
     output: List[int] = field(default_factory=list)
     pc: int = 0
-    debug: bool = False
+    debug: bool = True
 
     def snapshot(self):
         return Program(memory=self.memory[:], pc=self.pc)
@@ -124,25 +124,40 @@ class Program:
         # Prepare the args for the operation, including addressing mode
         # If the parameter name contains "addr" it is never treated as immediate value
         args = self.memory[self.pc + 1:self.pc + op.size]
+        op_args = args[:]
+        debug_args = [str(arg) for arg in args]
         params = list(inspect.signature(op.fn).parameters)
         if len(args) >= 1 and mode1 == 0 and "addr" not in params[1]:
-            args[0] = self.memory[args[0]]
+            op_args[0] = self.memory[args[0]]
+            debug_args[0] = f"@{args[0]}={op_args[0]}"
         if len(args) >= 2 and mode2 == 0 and "addr" not in params[2]:
-            args[1] = self.memory[args[1]]
+            op_args[1] = self.memory[args[1]]
+            debug_args[1] = f"@{args[1]}={op_args[1]}"
         if len(args) >= 3 and mode3 == 0 and "addr" not in params[3]:
-            args[2] = self.memory[args[2]]
+            op_args[2] = self.memory[args[2]]
+            debug_args[1] = f"@{args[2]}={op_args[2]}"
 
         # Call the operation
-        result = op.fn(self, *args)
+        result = op.fn(self, *op_args)
         if self.debug:
-            print(f"@{self.pc} {op.name} {args[1:]}\t=> {', '.join([f'@{k}={v}' for k, v in result.update.items()])}")
+            print(f"@{self.pc} {op.name} {' '.join(debug_args)}")
 
         # Apply updates
         for addr, value in result.update.items():
+            if self.debug:
+                print(f"\tset @{addr}={value}")
             self.memory[addr] = value
+
+        # Write output
+        if result.output:
+            if self.debug:
+                print(f"\toutput {result.output}")
+            self.output.append(result.output)
 
         # Update program counter
         if result.jump:
+            if self.debug:
+                print(f"\tjump @{result.jump}")
             self.pc = result.jump
         else:
             self.pc = self.pc + op.size
