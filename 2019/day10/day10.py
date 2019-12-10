@@ -45,14 +45,18 @@ print(counts[(base_x, base_y)])
 # Convention is -90 degrees is up & angle becomes more positive clockwise: zero=right; wraps 270 to -90
 def angle_from_base(x, y):
     if (x - base_x) == 0:
+        # Avoid division by zero
         if y > base_y:
             result = 90.0
         else:
             result = -90.0
     else:
         result = math.degrees(math.atan((y - base_y) / (x - base_x)))
+
+    # Ensure we use the full 360 degrees -- atan returns -90 to +90
     if x < base_x:
         result = result - 180
+
     return result
 
 
