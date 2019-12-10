@@ -42,6 +42,7 @@ print(counts[(base_x, base_y)])
 
 
 # Part 2
+# Convention is -90 degrees is up & angle becomes more positive clockwise: zero=right; wraps 270 to -90
 def angle_from_base(x, y):
     if (x - base_x) == 0:
         if y > base_y:
