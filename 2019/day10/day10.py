@@ -42,7 +42,8 @@ print(counts[(base_x, base_y)])
 
 
 # Part 2
-# Convention is -90 degrees is up & angle becomes more positive clockwise: zero=right; wraps 270 to -90
+# Convention is -90 degrees is up, angle becomes more positive heading clockwise. Wraps from 90 degrees to -270.
+# i.e. 0 degrees is right; +90 degrees is down (wrapping to -270 degrees); -180 degrees is left
 def angle_from_base(x, y):
     if (x - base_x) == 0:
         # Avoid division by zero
@@ -53,7 +54,7 @@ def angle_from_base(x, y):
     else:
         result = math.degrees(math.atan((y - base_y) / (x - base_x)))
 
-    # Ensure we use the full 360 degrees -- atan returns -90 to +90
+    # Ensure we use the full 360 degree range -- atan returns -90 to +90
     if x < base_x:
         result = result - 180
 
@@ -71,7 +72,7 @@ for x, y in coords:
 next_angle = min([angle for angle in asteroid_angles.values() if angle >= -90.0])
 
 count = 0
-while True:
+while count < 200:
 
     # Find the closest asteroid at angle next_angle
     matching_angle = [coords for coords, angle in asteroid_angles.items() if angle == next_angle]
@@ -79,14 +80,13 @@ while True:
     next_hit = matching_angle[0]
     count = count + 1
     # print(f"Hit number {count} of {next_hit} at angle {next_angle} degrees")
-    if count == 200:
-        print(f"Result is {100 * next_hit[0] + next_hit[1]}")
-        break
 
     # Remove destroyed asteroid and rotate to the next angle
     del asteroid_angles[next_hit]
     remaining_in_sweep = [angle for angle in asteroid_angles.values() if angle > next_angle]
     if not remaining_in_sweep:
-        print("Wrapping around")
+        # print("Wrapping around")
         remaining_in_sweep = [angle for angle in asteroid_angles.values()]
     next_angle = min(remaining_in_sweep)
+
+print(f"Result is {100 * next_hit[0] + next_hit[1]}")
