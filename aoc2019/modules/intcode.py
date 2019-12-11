@@ -1,11 +1,8 @@
-#!/usr/bin/python3
-# Advent of code 2019 day 11
 import inspect
 from dataclasses import dataclass, field
 from typing import List, Dict, Callable
 
-OP_CODES = list()
-
+OP_CODES = {}
 
 @dataclass
 class OpResult:
@@ -16,7 +13,7 @@ class OpResult:
     terminated: bool = False
 
 
-@dataclass()
+@dataclass
 class OpCode:
     name: str
     code: int
@@ -25,7 +22,7 @@ class OpCode:
 
 def opcode(code):
     def register(func):
-        OP_CODES.append(OpCode(func.__name__, code, func))
+        OP_CODES[code] = OpCode(func.__name__, code, func)
         return func
 
     return register
@@ -137,10 +134,9 @@ class Program:
         opcode = opcode % 100
 
         # Find the operation implementation
-        op = [op_code for op_code in OP_CODES if op_code.code == opcode]
-        if not op:
+        op = OP_CODES.get(opcode, None)
+        if op is None:
             raise Exception(f"Unsupported opcode {opcode}")
-        op = op[0]
         params = list(inspect.signature(op.fn).parameters)
         op_size = len(params)
 
@@ -152,27 +148,28 @@ class Program:
         op_args = []
         debug_args = []
         for i in range(len(args)):
-            if arg_modes[i] == 0 and "addr" not in params[i + 1]:
+            param_name = params[i + 1]
+            if arg_modes[i] == 0 and "addr" not in param_name:
                 # Position mode
                 op_args.append(self.memory.get(args[i], 0))
-                debug_args.append(f"@{args[i]}={op_args[i]}")
+                debug_args.append(f"{param_name}=*{args[i]}={op_args[i]}")
             elif arg_modes[i] == 2:
                 # Relative mode
-                if "addr" in params[i + 1]:
+                if "addr" in param_name:
                     # For address parameters, provide the relative address
                     op_args.append(args[i] + self.relative_base)
-                    debug_args.append(f"@[{self.relative_base}+{args[i]}]")
+                    debug_args.append(f"{param_name}=({self.relative_base}+{args[i]})")
                 else:
                     # For other parameters dereference the relative address
                     op_args.append(self.memory.get(args[i] + self.relative_base, 0))
-                    debug_args.append(f"@[{self.relative_base}+{args[i]}]={op_args[i]}")
+                    debug_args.append(f"{param_name}=*({self.relative_base}+{args[i]})={op_args[i]}")
             else:
                 # Immediate mode
                 op_args.append(args[i])
-                debug_args.append(f"@{args[i]}")
+                debug_args.append(f"{param_name}={args[i]}")
 
         if self.debug:
-            print(f"T{self.tick_count}\t@{self.pc} {op.name} {' '.join(debug_args)}")
+            print(f"T+{self.tick_count}\t@{self.pc} {op.name}({', '.join(debug_args)})")
 
         # Call the operation
         result = op.fn(self, *op_args)
@@ -180,31 +177,31 @@ class Program:
         # Apply updates
         for addr, value in result.update.items():
             if self.debug:
-                print(f"\t\tset @{addr}={value}")
+                print(f"\t\t=> set @{addr}={value}")
             self.memory[addr] = value
 
         # Write output
         if result.output is not None:
             if self.debug:
-                print(f"\t\toutput {result.output}")
+                print(f"\t\t=> output {result.output}")
             self.output.append(result.output)
 
         # Update program counter
         if result.jump is not None:
             if self.debug:
-                print(f"\t\tjump @{result.jump}")
+                print(f"\t\t=> jump @{result.jump}")
             self.pc = result.jump
         else:
             self.pc = self.pc + op_size
 
         if result.relative_base is not None:
             if self.debug:
-                print(f"\t\tset relative_base={result.relative_base}")
+                print(f"\t\t=> set relative_base={result.relative_base}")
             self.relative_base = result.relative_base
 
         if result.terminated:
             if self.debug:
-                print(f"\t\tset terminated={result.terminated}")
+                print(f"\t\t=> set terminated={result.terminated}")
             self.terminated = True
 
         return not self.terminated
@@ -218,57 +215,16 @@ def format_memory(program):
     return memory
 
 
-with open("input.txt") as f:
-    lines = f.readlines()
-memory = [int(value) for value in lines[0].split(",")]
-p = Program(memory=format_memory(memory), debug=True)
+def new_program(memory, **kwargs):
+    return Program(memory=format_memory(memory), **kwargs)
 
 
-directions = {
-    "up": ((0, -1), "left", "right"),
-    "left": ((-1, 0), "down", "up"),
-    "down": ((0, 1), "right", "left"),
-    "right": ((1, 0), "up", "down")
-}
-
-direction = "up"
+def load_program(program_data, **kwargs):
+    memory = [int(value) for value in program_data.split(",")]
+    return new_program(memory, **kwargs)
 
 
-cells = {}
-current_location = (0, 0)
-cells[current_location] = 1  # Part 2 - start on white; zero for part 1
-
-cells_painted_once = set()
-
-while True:
-    p.input.append(cells.get(current_location, 0))
-    new_colour = p.next_output()
-    if new_colour is None:
-        break
-    cells[current_location] = new_colour
-    if new_colour == 1:
-        cells_painted_once.add(current_location)
-    turn = p.next_output()
-    if turn == 0:
-        direction = directions[direction][1]
-    elif turn == 1:
-        direction = directions[direction][2]
-    else:
-        raise Exception(f"Unexpected turn {turn}")
-    move = directions[direction][0]
-    current_location = (current_location[0] + move[0], current_location[1] + move[1])
-
-# Part 1
-print(len(cells_painted_once))
-
-# Part 2
-xs = [c[0] for c in cells.keys()]
-ys = [c[1] for c in cells.keys()]
-for y in range(min(ys) - 1, max(ys) + 2):
-    row = []
-    for x in range(min(xs) - 1, max(xs) + 2):
-        if cells.get((x, y), 0) == 1:
-            row.append("*")
-        else:
-            row.append(" ")
-    print("".join(row))
+def load_file(file, **kwargs):
+    with open(file) as f:
+        program_data = f.readline()
+        return load_program(program_data, **kwargs)
