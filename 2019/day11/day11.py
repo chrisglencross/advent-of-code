@@ -13,35 +13,35 @@ class OpResult:
     output: int = None
     jump: int = None
     relative_base: int = None
+    terminated: bool = False
 
 
 @dataclass()
 class OpCode:
     name: str
     code: int
-    size: int
     fn: Callable[..., OpResult]
 
 
-def opcode(code, size):
+def opcode(code):
     def register(func):
-        OP_CODES.append(OpCode(func.__name__, code, size, func))
+        OP_CODES.append(OpCode(func.__name__, code, func))
         return func
 
     return register
 
 
-@opcode(code=1, size=4)
+@opcode(code=1)
 def op_add(program, a1, a2, target_addr):
     return OpResult(update={target_addr: a1 + a2})
 
 
-@opcode(code=2, size=4)
+@opcode(code=2)
 def op_mul(program, a1, a2, target_addr):
     return OpResult(update={target_addr: a1 * a2})
 
 
-@opcode(code=3, size=2)
+@opcode(code=3)
 def op_input(program, target_addr):
     if not program.input:
         print("Blocking because no input")
@@ -50,12 +50,12 @@ def op_input(program, target_addr):
     return OpResult(update={target_addr: value})
 
 
-@opcode(code=4, size=2)
+@opcode(code=4)
 def op_output(program, a1):
     return OpResult(output=a1)
 
 
-@opcode(code=5, size=3)
+@opcode(code=5)
 def op_jump_if_true(program, a1, a2):
     if a1 != 0:
         return OpResult(jump=a2)
@@ -63,7 +63,7 @@ def op_jump_if_true(program, a1, a2):
         return OpResult()
 
 
-@opcode(code=6, size=3)
+@opcode(code=6)
 def op_jump_if_false(program, a1, a2):
     if a1 == 0:
         return OpResult(jump=a2)
@@ -71,7 +71,7 @@ def op_jump_if_false(program, a1, a2):
         return OpResult()
 
 
-@opcode(code=7, size=4)
+@opcode(code=7)
 def op_less_than(program, a1, a2, target_addr):
     if a1 < a2:
         return OpResult(update={target_addr: 1})
@@ -79,7 +79,7 @@ def op_less_than(program, a1, a2, target_addr):
         return OpResult(update={target_addr: 0})
 
 
-@opcode(code=8, size=4)
+@opcode(code=8)
 def op_eq(program, a1, a2, target_addr):
     if a1 == a2:
         return OpResult(update={target_addr: 1})
@@ -87,14 +87,14 @@ def op_eq(program, a1, a2, target_addr):
         return OpResult(update={target_addr: 0})
 
 
-@opcode(code=9, size=2)
+@opcode(code=9)
 def op_adjust_relative_base(program, a):
     return OpResult(relative_base=program.relative_base + a)
 
 
-@opcode(code=99, size=1)
+@opcode(code=99)
 def op_exit(program):
-    return OpResult()
+    return OpResult(terminated=True)
 
 
 @dataclass
@@ -106,36 +106,49 @@ class Program:
     pc: int = 0
     relative_base: int = 0
     debug: bool = False
+    tick_count: int = 0
+    terminated: bool = False
 
     def snapshot(self):
         return Program(memory=dict(self.memory), pc=self.pc)
 
     def is_terminated(self):
-        return self.memory[self.pc] == 99
+        return self.terminated
+
+    def next_output(self):
+        while not self.output and not self.is_terminated():
+            self.tick()
+        if self.output:
+            return self.output.pop()
+        else:
+            return None
 
     def tick(self):
+
+        if self.terminated:
+            print("WARNING: already terminated")
+            return False
+
+        self.tick_count = self.tick_count + 1
 
         # Decode opcode and argument modes
         opcode = self.memory[self.pc]
         arg_modes = [(opcode // 100) % 10, (opcode // 1000) % 10, (opcode // 10000) % 10]
-        opcode = opcode % 10
-
-        # Terminate
-        if opcode == 99:
-            return False
+        opcode = opcode % 100
 
         # Find the operation implementation
         op = [op_code for op_code in OP_CODES if op_code.code == opcode]
         if not op:
             raise Exception(f"Unsupported opcode {opcode}")
         op = op[0]
+        params = list(inspect.signature(op.fn).parameters)
+        op_size = len(params)
 
         # Prepare the args for the operation, including addressing mode
         # If the parameter name contains "addr" it is never treated as immediate value
         args = []
-        for addr in range(self.pc + 1, self.pc + op.size):
+        for addr in range(self.pc + 1, self.pc + op_size):
             args.append(self.memory[addr])
-        params = list(inspect.signature(op.fn).parameters)
         op_args = []
         debug_args = []
         for i in range(len(args)):
@@ -158,47 +171,57 @@ class Program:
                 op_args.append(args[i])
                 debug_args.append(f"@{args[i]}")
 
+        if self.debug:
+            print(f"T{self.tick_count}\t@{self.pc} {op.name} {' '.join(debug_args)}")
+
         # Call the operation
         result = op.fn(self, *op_args)
-        if self.debug:
-            print(f"@{self.pc} {op.name} {' '.join(debug_args)}")
 
         # Apply updates
         for addr, value in result.update.items():
             if self.debug:
-                print(f"\tset @{addr}={value}")
+                print(f"\t\tset @{addr}={value}")
             self.memory[addr] = value
 
         # Write output
         if result.output is not None:
             if self.debug:
-                print(f"\toutput {result.output}")
+                print(f"\t\toutput {result.output}")
             self.output.append(result.output)
 
         # Update program counter
         if result.jump is not None:
             if self.debug:
-                print(f"\tjump @{result.jump}")
+                print(f"\t\tjump @{result.jump}")
             self.pc = result.jump
         else:
-            self.pc = self.pc + op.size
+            self.pc = self.pc + op_size
 
         if result.relative_base is not None:
             if self.debug:
-                print(f"\tset relative_base={result.relative_base}")
+                print(f"\t\tset relative_base={result.relative_base}")
             self.relative_base = result.relative_base
 
-        return True
+        if result.terminated:
+            if self.debug:
+                print(f"\t\tset terminated={result.terminated}")
+            self.terminated = True
+
+        return not self.terminated
 
 
-def run_program(memory, input_values):
-    dict_memory = {}
-    for i, b in enumerate(memory):
-        dict_memory[i] = b
-    p = Program(memory=dict_memory, pc=0, input=input_values)
-    while not p.is_terminated():
-        p.tick()
-    return p.output
+# Memory is represented as an addr->value dictionary to give a sparse resizable address space.
+def format_memory(program):
+    memory = {}
+    for addr, value in enumerate(program):
+        memory[addr] = value
+    return memory
+
+
+with open("input.txt") as f:
+    lines = f.readlines()
+memory = [int(value) for value in lines[0].split(",")]
+p = Program(memory=format_memory(memory), debug=True)
 
 
 directions = {
@@ -210,33 +233,22 @@ directions = {
 
 direction = "up"
 
+
 cells = {}
-cells_painted_once = set()
 current_location = (0, 0)
-
-with open("input.txt") as f:
-    lines = f.readlines()
-memory = [int(value) for value in lines[0].split(",")]
-dict_memory = {}
-for i, b in enumerate(memory):
-    dict_memory[i] = b
-p = Program(memory=dict_memory, pc=0)
-
 cells[current_location] = 1  # Part 2 - start on white; zero for part 1
 
-while not p.is_terminated():
+cells_painted_once = set()
+
+while True:
     p.input.append(cells.get(current_location, 0))
-    while not p.output and not p.is_terminated():
-        p.tick()
-    if p.is_terminated():
+    new_colour = p.next_output()
+    if new_colour is None:
         break
-    new_colour = p.output.pop(0)
     cells[current_location] = new_colour
     if new_colour == 1:
         cells_painted_once.add(current_location)
-    while not p.output and not p.is_terminated():
-        p.tick()
-    turn = p.output.pop(0)
+    turn = p.next_output()
     if turn == 0:
         direction = directions[direction][1]
     elif turn == 1:
