@@ -177,7 +177,7 @@ class Program:
         # Apply updates
         for addr, value in result.update.items():
             if self.debug:
-                print(f"\t\t=> set @{addr}={value}")
+                print(f"\t\t=> set *{addr}={value}")
             self.memory[addr] = value
 
         # Write output
