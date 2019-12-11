@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Advent of code 2019 day 5
+# Advent of code 2019 day 7
 import inspect
 import itertools
 from dataclasses import dataclass, field

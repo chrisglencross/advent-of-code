@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# Advent of code 2019 day 9
+# Advent of code 2019 day 11
 import inspect
 from dataclasses import dataclass, field
 from typing import List, Dict, Callable
@@ -201,8 +201,62 @@ def run_program(memory, input_values):
     return p.output
 
 
+directions = {
+    "up": ((0, -1), "left", "right"),
+    "left": ((-1, 0), "down", "up"),
+    "down": ((0, 1), "right", "left"),
+    "right": ((1, 0), "up", "down")
+}
+
+direction = "up"
+
+cells = {}
+cells_painted_once = set()
+current_location = (0, 0)
+
 with open("input.txt") as f:
     lines = f.readlines()
 memory = [int(value) for value in lines[0].split(",")]
-output = run_program(memory, [2])
-print(output)
+dict_memory = {}
+for i, b in enumerate(memory):
+    dict_memory[i] = b
+p = Program(memory=dict_memory, pc=0)
+
+cells[current_location] = 1  # Part 2 - start on white; zero for part 1
+
+while not p.is_terminated():
+    p.input.append(cells.get(current_location, 0))
+    while not p.output and not p.is_terminated():
+        p.tick()
+    if p.is_terminated():
+        break
+    new_colour = p.output.pop(0)
+    cells[current_location] = new_colour
+    if new_colour == 1:
+        cells_painted_once.add(current_location)
+    while not p.output and not p.is_terminated():
+        p.tick()
+    turn = p.output.pop(0)
+    if turn == 0:
+        direction = directions[direction][1]
+    elif turn == 1:
+        direction = directions[direction][2]
+    else:
+        raise Exception(f"Unexpected turn {turn}")
+    move = directions[direction][0]
+    current_location = (current_location[0] + move[0], current_location[1] + move[1])
+
+# Part 1
+print(len(cells_painted_once))
+
+# Part 2
+xs = [c[0] for c in cells.keys()]
+ys = [c[1] for c in cells.keys()]
+for y in range(min(ys) - 1, max(ys) + 2):
+    row = []
+    for x in range(min(xs) - 1, max(xs) + 2):
+        if cells.get((x, y), 0) == 1:
+            row.append("*")
+        else:
+            row.append(" ")
+    print("".join(row))
