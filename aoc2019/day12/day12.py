@@ -68,7 +68,7 @@ def get_dimension_state(dimension):
 def part2():
     init_moons()
 
-    # Record 3 initial dimension states, containing velocity and position for all moons in that direction
+    # Record 3 initial dimension states (x, y, z axis), containing velocity and position for all moons in that dimension
     dimension_initial_states = dict()
     for dimension in range(0, 3):
         dimension_initial_states[dimension] = get_dimension_state(dimension)
@@ -85,6 +85,7 @@ def part2():
 
     print(f"Dimension repeat intervals: {repeat_intervals}")
 
+    # Entire system repeats after the lowest-common-multiple of all dimension repeat intervals
     p = 1
     for interval in repeat_intervals.values():
         p = numpy.lcm(p, interval)
