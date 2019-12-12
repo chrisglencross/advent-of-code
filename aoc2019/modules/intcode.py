@@ -163,24 +163,27 @@ class Program:
             if arg_modes[i] == 0 and "addr" not in param_name:
                 # Position mode
                 op_args.append(self.memory_get(args[i]))
-                debug_args.append(f"{param_name}=*{args[i]}={op_args[i]}")
+                debug_args.append(f"{param_name}=@{args[i]:04}={op_args[i]}")
             elif arg_modes[i] == 2:
                 # Relative mode
                 if "addr" in param_name:
                     # For address parameters, provide the relative address
                     op_args.append(args[i] + self.relative_base)
-                    debug_args.append(f"{param_name}=({self.relative_base}+{args[i]})")
+                    debug_args.append(f"{param_name}=({self.relative_base:04}+{args[i]})")
                 else:
                     # For other parameters dereference the relative address
                     op_args.append(self.memory_get(args[i] + self.relative_base))
-                    debug_args.append(f"{param_name}=*({self.relative_base}+{args[i]})={op_args[i]}")
+                    debug_args.append(f"{param_name}=@({self.relative_base:04}+{args[i]})={op_args[i]}")
             else:
                 # Immediate mode
                 op_args.append(args[i])
-                debug_args.append(f"{param_name}={args[i]}")
+                if "target" in param_name:
+                    debug_args.append(f"{param_name}={args[i]:04}")
+                else:
+                    debug_args.append(f"{param_name}={args[i]}")
 
         if self.debug:
-            print(f"T+{self.tick_count}\t@{self.pc} {op.name}({', '.join(debug_args)})")
+            print(f"T+{self.tick_count:04}\t@{self.pc:04}\t{op.name}({', '.join(debug_args)})")
 
         # Call the operation
         result = op.fn(self, *op_args)
@@ -188,31 +191,31 @@ class Program:
         # Apply updates
         for addr, value in result.update.items():
             if self.debug:
-                print(f"\t\t=> set *{addr}={value}")
+                print(f"\t\t\t\t=> set @{addr}={value}")
             self.memory[addr] = value
 
         # Write output
         if result.output is not None:
             if self.debug:
-                print(f"\t\t=> output {result.output}")
+                print(f"\t\t\t\t=> output {result.output}")
             self.output.append(result.output)
 
         # Update program counter
         if result.jump is not None:
             if self.debug:
-                print(f"\t\t=> jump @{result.jump}")
+                print(f"\t\t\t\t=> jump @{result.jump:04}")
             self.pc = result.jump
         else:
             self.pc = self.pc + op_size
 
         if result.relative_base is not None:
             if self.debug:
-                print(f"\t\t=> set relative_base={result.relative_base}")
+                print(f"\t\t\t\t=> set relative_base={result.relative_base}")
             self.relative_base = result.relative_base
 
         if result.terminated:
             if self.debug:
-                print(f"\t\t=> set terminated={result.terminated}")
+                print(f"\t\t\t\t=> set terminated={result.terminated}")
             self.terminated = True
 
         return not self.terminated
@@ -237,9 +240,9 @@ class Program:
                     run_length = run_length + 1
                     addr = addr + 1
                 if run_length > 1:
-                    print(f"@{start_addr} DATA={opcode} * {run_length}")
+                    print(f"@{start_addr:04} DATA={opcode} * {run_length}")
                 else:
-                    print(f"@{start_addr} DATA={opcode}")
+                    print(f"@{start_addr:04} DATA={opcode}")
             else:
                 op_size = op.size
                 params = op.params
@@ -254,7 +257,7 @@ class Program:
                     param_name = params[i + 1]
                     if arg_modes[i] == 0 and "addr" not in param_name:
                         # Position mode
-                        debug_args.append(f"{param_name}=*{arg}")
+                        debug_args.append(f"{param_name}=@{arg:04}")
                     elif arg_modes[i] == 2:
                         # Relative mode
                         if "addr" in param_name:
@@ -262,12 +265,15 @@ class Program:
                             debug_args.append(f"{param_name}=(relative_base+{arg})")
                         else:
                             # For other parameters dereference the relative address
-                            debug_args.append(f"{param_name}=*(relative_base+{arg})")
+                            debug_args.append(f"{param_name}=@(relative_base+{arg})")
                     else:
                         # Immediate mode
-                        debug_args.append(f"{param_name}={arg}")
+                        if "target" in param_name:
+                            debug_args.append(f"{param_name}={arg:04}")
+                        else:
+                            debug_args.append(f"{param_name}={arg}")
 
-                print(f"@{addr} {op.name}({', '.join(debug_args)})")
+                print(f"@{addr:04} {op.name}({', '.join(debug_args)})")
                 addr = addr + op_size
 
 
