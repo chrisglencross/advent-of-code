@@ -27,7 +27,7 @@ def tick():
     for moon1 in moons:
         gravity = list([0, 0, 0])
         for moon2 in moons:
-            if moon1.name == moon2.name:
+            if moon1 is moon2:
                 continue
             for dimension in range(0, 3):
                 if moon1.position[dimension] > moon2.position[dimension]:

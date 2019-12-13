@@ -25,7 +25,7 @@ class OpCode:
 def opcode(code):
     def register(func):
         params = list(inspect.signature(func).parameters)
-        OP_CODES[code] = OpCode(func.__name__, code, len(params), func, params)
+        OP_CODES[code] = OpCode(func.__name__.replace("op_", ""), code, len(params), func, params)
         return func
 
     return register
@@ -109,6 +109,12 @@ class Program:
     tick_count: int = 0
     terminated: bool = False
 
+    # Identify addresses which are code and addresses which are data
+    # The intersection is self-modifying code
+    code_addr = set()
+    data_addr = set()
+
+
     def snapshot(self):
         return Program(memory=dict(self.memory), pc=self.pc)
 
@@ -128,7 +134,11 @@ class Program:
             self.tick()
         return self.output
 
-    def memory_get(self, address):
+    def memory_get(self, address, code=False, data=False):
+        if code:
+            self.code_addr.add(address)
+        if data:
+            self.data_addr.add(address)
         return self.memory.get(address, 0)
 
     def tick(self):
@@ -139,8 +149,10 @@ class Program:
 
         self.tick_count = self.tick_count + 1
 
+        is_self_modifying_code = self.pc in self.data_addr
+
         # Decode opcode and argument modes
-        opcode = self.memory[self.pc]
+        opcode = self.memory_get(self.pc, code=True)
         arg_modes = [(opcode // 100) % 10, (opcode // 1000) % 10, (opcode // 10000) % 10]
         opcode = opcode % 100
 
@@ -155,14 +167,15 @@ class Program:
         # If the parameter name contains "addr" it is never treated as immediate value
         args = []
         for addr in range(self.pc + 1, self.pc + op_size):
-            args.append(self.memory[addr])
+            args.append(self.memory_get(addr, code=True))
+            is_self_modifying_code = is_self_modifying_code or self.pc in self.data_addr
         op_args = []
         debug_args = []
         for i in range(len(args)):
             param_name = params[i + 1]
             if arg_modes[i] == 0 and "addr" not in param_name:
                 # Position mode
-                op_args.append(self.memory_get(args[i]))
+                op_args.append(self.memory_get(args[i], data=True))
                 debug_args.append(f"{param_name}=@{args[i]:04}={op_args[i]}")
             elif arg_modes[i] == 2:
                 # Relative mode
@@ -172,7 +185,7 @@ class Program:
                     debug_args.append(f"{param_name}=({self.relative_base:04}+{args[i]})")
                 else:
                     # For other parameters dereference the relative address
-                    op_args.append(self.memory_get(args[i] + self.relative_base))
+                    op_args.append(self.memory_get(args[i] + self.relative_base, data=True))
                     debug_args.append(f"{param_name}=@({self.relative_base:04}+{args[i]})={op_args[i]}")
             else:
                 # Immediate mode
@@ -183,7 +196,10 @@ class Program:
                     debug_args.append(f"{param_name}={args[i]}")
 
         if self.debug:
-            print(f"T+{self.tick_count:04}\t@{self.pc:04}\t{op.name}({', '.join(debug_args)})")
+            self_modifying_indicator = ""
+            if is_self_modifying_code:
+                self_modifying_indicator = " [self modifying code]"
+            print(f"T+{self.tick_count:04} @{self.pc:04} {op.name}({', '.join(debug_args)}){self_modifying_indicator}")
 
         # Call the operation
         result = op.fn(self, *op_args)
@@ -193,6 +209,7 @@ class Program:
             if self.debug:
                 print(f"\t\t\t\t=> set @{addr}={value}")
             self.memory[addr] = value
+            self.data_addr.add(addr)
 
         # Write output
         if result.output is not None:
