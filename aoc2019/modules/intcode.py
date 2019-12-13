@@ -44,7 +44,7 @@ def op_mul(program, a1, a2, target_addr):
 @opcode(code=3)
 def op_input(program, target_addr):
     if not program.input:
-        print("Blocking because no input")
+        print("Program is blocked waiting for input")
         return OpResult(jump=program.pc)
     value = program.input.pop(0)
     return OpResult(update={target_addr: value})
@@ -111,6 +111,7 @@ class Program:
 
     # Identify addresses which are code and addresses which are data
     # The intersection is self-modifying code
+    # Used for annotating the disassembly
     code_addr: Set[int] = field(default_factory=set)
     read_data_addr: Set[int] = field(default_factory=set)
     write_data_addr: Set[int] = field(default_factory=set)
@@ -124,17 +125,24 @@ class Program:
     def is_terminated(self):
         return self.terminated
 
+    def is_blocked(self):
+        return self.memory_get(self.pc) == 3 and len(self.input) == 0
+
     def next_output(self):
-        while not self.output and not self.is_terminated():
+        while not self.output and not self.is_terminated() and not self.is_blocked():
             self.tick()
         if self.output:
             return self.output.pop()
         else:
             return None
 
-    def run(self):
+    def run(self, limit=None):
+        count = 0
         while not self.is_terminated():
+            if limit is not None and count >= limit:
+                break
             self.tick()
+            count = count + 1
         return self.output
 
     def memory_get(self, address, code=False, data=False):
@@ -256,7 +264,7 @@ class Program:
             is_self_modifying_code = addr in self.write_data_addr
 
             # Decode opcode and argument modes
-            opcode = self.memory[addr]
+            opcode = self.memory_get(addr)
             arg_modes = [(opcode // 100) % 10, (opcode // 1000) % 10, (opcode // 10000) % 10]
             opcode = opcode % 100
 
