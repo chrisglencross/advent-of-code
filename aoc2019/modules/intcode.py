@@ -1,6 +1,6 @@
 import inspect
 from dataclasses import dataclass, field
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Set
 
 OP_CODES = {}
 
@@ -111,8 +111,11 @@ class Program:
 
     # Identify addresses which are code and addresses which are data
     # The intersection is self-modifying code
-    code_addr = set()
-    data_addr = set()
+    code_addr: Set[int] = field(default_factory=set)
+    read_data_addr: Set[int] = field(default_factory=set)
+    write_data_addr: Set[int] = field(default_factory=set)
+    jump_targets: Set[int] = field(default_factory=set)
+    relative_base_addr: Set[int] = field(default_factory=set)
 
 
     def snapshot(self):
@@ -138,7 +141,7 @@ class Program:
         if code:
             self.code_addr.add(address)
         if data:
-            self.data_addr.add(address)
+            self.read_data_addr.add(address)
         return self.memory.get(address, 0)
 
     def tick(self):
@@ -149,7 +152,7 @@ class Program:
 
         self.tick_count = self.tick_count + 1
 
-        is_self_modifying_code = self.pc in self.data_addr
+        is_self_modifying_code = self.pc in self.write_data_addr
 
         # Decode opcode and argument modes
         opcode = self.memory_get(self.pc, code=True)
@@ -168,14 +171,14 @@ class Program:
         args = []
         for addr in range(self.pc + 1, self.pc + op_size):
             args.append(self.memory_get(addr, code=True))
-            is_self_modifying_code = is_self_modifying_code or self.pc in self.data_addr
+            is_self_modifying_code = is_self_modifying_code or self.pc in self.write_data_addr
         op_args = []
         debug_args = []
         for i in range(len(args)):
             param_name = params[i + 1]
             if arg_modes[i] == 0 and "addr" not in param_name:
                 # Position mode
-                op_args.append(self.memory_get(args[i], data=True))
+                op_args.append(self.memory_get(args[i]))
                 debug_args.append(f"{param_name}=@{args[i]:04}={op_args[i]}")
             elif arg_modes[i] == 2:
                 # Relative mode
@@ -185,7 +188,7 @@ class Program:
                     debug_args.append(f"{param_name}=({self.relative_base:04}+{args[i]})")
                 else:
                     # For other parameters dereference the relative address
-                    op_args.append(self.memory_get(args[i] + self.relative_base, data=True))
+                    op_args.append(self.memory_get(args[i] + self.relative_base))
                     debug_args.append(f"{param_name}=@({self.relative_base:04}+{args[i]})={op_args[i]}")
             else:
                 # Immediate mode
@@ -196,10 +199,16 @@ class Program:
                     debug_args.append(f"{param_name}={args[i]}")
 
         if self.debug:
-            self_modifying_indicator = ""
+            comments = []
             if is_self_modifying_code:
-                self_modifying_indicator = " [self modifying code]"
-            print(f"T+{self.tick_count:04} @{self.pc:04} {op.name}({', '.join(debug_args)}){self_modifying_indicator}")
+                comments.append("DATA")
+            if self.pc in self.jump_targets:
+                comments.append("JUMP TARGET")
+            if comments:
+                comment_str = f"\t# {', '.join(comments)}"
+            else:
+                comment_str = ""
+            print(f"T+{self.tick_count:04} @{self.pc:04} {op.name}({', '.join(debug_args)}){comment_str}")
 
         # Call the operation
         result = op.fn(self, *op_args)
@@ -209,7 +218,7 @@ class Program:
             if self.debug:
                 print(f"\t\t\t\t=> set @{addr}={value}")
             self.memory[addr] = value
-            self.data_addr.add(addr)
+            self.write_data_addr.add(addr)
 
         # Write output
         if result.output is not None:
@@ -222,6 +231,7 @@ class Program:
             if self.debug:
                 print(f"\t\t\t\t=> jump @{result.jump:04}")
             self.pc = result.jump
+            self.jump_targets.add(result.jump)
         else:
             self.pc = self.pc + op_size
 
@@ -229,6 +239,7 @@ class Program:
             if self.debug:
                 print(f"\t\t\t\t=> set relative_base={result.relative_base}")
             self.relative_base = result.relative_base
+            self.relative_base_addr.add(result.relative_base)
 
         if result.terminated:
             if self.debug:
@@ -242,6 +253,8 @@ class Program:
         addr = 0
         while addr <= max_address:
 
+            is_self_modifying_code = addr in self.write_data_addr
+
             # Decode opcode and argument modes
             opcode = self.memory[addr]
             arg_modes = [(opcode // 100) % 10, (opcode // 1000) % 10, (opcode // 10000) % 10]
@@ -249,17 +262,16 @@ class Program:
 
             # Find the operation implementation
             op = OP_CODES.get(opcode, None)
-            if op is None:
-                run_length = 1
-                start_addr = addr
+
+            # Debug as data if not understood, or tracing history shows this has been used as data and never executed
+            if op is None or (addr not in self.code_addr and
+                              (addr in self.read_data_addr or addr in self.write_data_addr)):
+                is_relative_base = addr in self.relative_base_addr
+                comment_str = ""
+                if is_relative_base:
+                    comment_str = "\t# RELATIVE BASE"
+                print(f"@{addr:04}\t{opcode}{comment_str}")
                 addr = addr + 1
-                while addr <= max_address and self.memory[addr] == opcode:
-                    run_length = run_length + 1
-                    addr = addr + 1
-                if run_length > 1:
-                    print(f"@{start_addr:04} DATA={opcode} * {run_length}")
-                else:
-                    print(f"@{start_addr:04} DATA={opcode}")
             else:
                 op_size = op.size
                 params = op.params
@@ -268,6 +280,7 @@ class Program:
                 # If the parameter name contains "addr" it is never treated as immediate value
                 args = []
                 for param_addr in range(addr + 1, addr + op_size):
+                    is_self_modifying_code = is_self_modifying_code or param_addr in self.write_data_addr
                     args.append(self.memory_get(param_addr))
                 debug_args = []
                 for i, arg in enumerate(args):
@@ -290,7 +303,17 @@ class Program:
                         else:
                             debug_args.append(f"{param_name}={arg}")
 
-                print(f"@{addr:04} {op.name}({', '.join(debug_args)})")
+                comments = []
+                if is_self_modifying_code:
+                    comments.append("DATA")
+                if addr in self.jump_targets:
+                    comments.append("JUMP TARGET")
+                if comments:
+                    comment_str = f"\t# {', '.join(comments)}"
+                else:
+                    comment_str = ""
+
+                print(f"@{addr:04}\t{op.name}({', '.join(debug_args)}){comment_str}")
                 addr = addr + op_size
 
 

@@ -40,6 +40,8 @@ def paint(initial_colour):
         move = DIRECTIONS[direction][0]
         current_location = (current_location[0] + move[0], current_location[1] + move[1])
 
+    program.print_disassembly()
+
     return cells_painted_once, cells
 
 
