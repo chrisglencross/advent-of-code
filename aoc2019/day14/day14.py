@@ -64,9 +64,12 @@ def get_sorted_products(dependencies):
 
 def ore_required(fuel_count):
     requirements = {"FUEL": fuel_count}
+
     for product in sorted_products:
+
         if product == "ORE":
             continue
+
         recipe = recipes[product]
         requirement = requirements.get(product, 0)
         use_recipe_times = requirement // recipe.product_quantity
@@ -81,8 +84,28 @@ def ore_required(fuel_count):
     return requirements["ORE"]
 
 
-if __name__ == "__main__":
+# Finds the amount of fuel that can be produced by max_ore using a binary search
+def binary_search(max_ore, lo=1, hi=None):
+    while hi is None or lo < hi:
+        if hi is None:
+            # No upper limit yet; try guessing double the previous value
+            fuel_guess = lo * 2
+        else:
+            # Try the mid-point of the lo/hi range
+            fuel_guess = (lo + hi) // 2
+        ore = ore_required(fuel_guess)
+        if ore < max_ore:
+            lo = fuel_guess + 1
+        elif ore > max_ore:
+            hi = fuel_guess
+        else:
+            return fuel_guess
 
+    # No exact solution, but lo ends up just above the closest match
+    return lo - 1
+
+
+if __name__ == "__main__":
     recipes = load_recipes()
     dependencies = build_dependencies(recipes.values())
 
@@ -90,27 +113,8 @@ if __name__ == "__main__":
     sorted_products.reverse()
 
     # Part 1
-    print(ore_required(1))
+    ore_required_for_one_fuel = ore_required(1)
+    print(ore_required_for_one_fuel)
 
-    # Part 2 - binary search for the answer between lower_limit and upper_limit
-    lower_limit = 0
-    upper_limit = None
-    guess_fuel = 1
-    target = 1000000000000
-    while True:
-        ore = ore_required(guess_fuel)
-        if ore == target:
-            print(f"Exact match {guess_fuel}")
-            break
-        if ore < target:
-            if upper_limit and (upper_limit - lower_limit) <= 1:
-                print(f"Maximum {guess_fuel} fuel produced from {ore} ore")
-                break
-            lower_limit = guess_fuel
-            if upper_limit is None:
-                guess_fuel = guess_fuel * 2
-            else:
-                guess_fuel = (upper_limit + lower_limit) // 2
-        elif ore > target:
-            upper_limit = guess_fuel
-            guess_fuel = (upper_limit + lower_limit) // 2
+    # Part 2
+    print(binary_search(1000000000000))
