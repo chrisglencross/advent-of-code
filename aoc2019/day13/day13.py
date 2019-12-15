@@ -8,7 +8,7 @@ from aoc2019.modules.textgridprinter import TextGridPrinter
 GENERATE_ANIMATED_GIF = True
 
 if GENERATE_ANIMATED_GIF:
-    grid_printer = ImageGridPrinter(filename="game.gif", sample=10, max_height=256, max_width=256,
+    grid_printer = ImageGridPrinter(filename="game.gif", sample=10, max_height=400, max_width=400, duration=20,
                                     colour_map={0: (0, 0, 0), 1: (255, 255, 255), 2: (128, 128, 128), 3: (0, 255, 255),
                                                 4: (255, 0, 0)})
 else:
@@ -39,8 +39,9 @@ def part1():
 def count_blocks(cells):
     return len([cell for cell in cells.values() if cell == 2])
 
+
 def print_grid(cells):
-    grid_printer.print(cells)
+    grid_printer.print(dict(cells))
 
 
 def get_coords(cells: dict, symbol):
