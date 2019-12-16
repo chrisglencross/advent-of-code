@@ -32,7 +32,7 @@ print("".join([str(value) for value in values[0:8]]))
 # Part 2 - uses a non-obvious optimisation.
 #
 # This relies on the fact that:
-#   a) the final value of the output is the same as the final digit of the input.
+#   a) the final digit value of the output is the same as the final digit of the input.
 #   b) the preceding value of the output is the value just calculated (for the next digit), plus the digit of the input
 #      in the corresponding position *for the second half of the output from a transformation only*.
 #  These imply that to calculate the Nth digit of output, you do not need to look at any digits prior to the Nth
