@@ -25,10 +25,10 @@ with open("input.txt") as f:
     line = f.readline()
 
 # Part 1, unoptimised
-values = [int(value) for value in line]
+digits = [int(value) for value in line]
 for phase in range(100):
-    values = [get_output_digit(values, digit_pos) for digit_pos in range(len(values))]
-print("".join([str(value) for value in values[0:8]]))
+    digits = [get_output_digit(digits, digit_pos) for digit_pos in range(len(digits))]
+print("".join([str(digit) for digit in digits[0:8]]))
 
 # Part 2 - uses a non-obvious optimisation.
 #
@@ -46,14 +46,14 @@ print("".join([str(value) for value in values[0:8]]))
 # output the multiplication matrix factors are: ((1, 1, 1, 1), (0, 1, 1, 1), (0, 0, 1, 1), (0, 0, 0, 1)).
 
 offset = int(line[0:7])
-values = [int(value) for value in line] * 10000
+input_digits = [int(value) for value in line] * 10000
 
 for phase in range(100):
-    digit_value = 0
-    new_values = [None] * len(values)
-    for digit_pos in range(len(values) - 1, offset - 1, -1):
-        digit_value += (values[digit_pos])
-        digit_value %= 10
-        new_values[digit_pos] = digit_value
-    values = new_values
-print("".join(str(value) for value in values[offset:(offset + 8)]))
+    output_digit = 0
+    output_digits = [None] * len(input_digits)
+    for digit_pos in range(len(output_digits) - 1, offset - 1, -1):
+        output_digit += input_digits[digit_pos]  # Multiplication factor for these cells is always 1
+        output_digit %= 10
+        output_digits[digit_pos] = output_digit
+    input_digits = output_digits
+print("".join(str(digit) for digit in output_digits[offset:offset + 8]))
