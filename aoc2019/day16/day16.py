@@ -31,13 +31,14 @@ print("".join([str(value) for value in values[0:8]]))
 
 # Part 2 - uses a non-obvious optimisation.
 #
-# This relies on the fact that:
+# This relies on pattern from the transformation rules that:
 #   a) the final digit value of the output is the same as the final digit of the input.
-#   b) the preceding value of the output is the value just calculated (for the next digit), plus the digit of the input
-#      in the corresponding position *for the second half of the output from a transformation only*.
-#  These imply that to calculate the Nth digit of output, you do not need to look at any digits prior to the Nth
-#  digit of input. Also:
-#   c) the digits that we are interested in, specified by our offset from our input, are in the second half of the
+#   b) the preceding digit of the output is the digit just calculated (i.e for the next digit), plus the digit of the
+#      input in the corresponding position, *for all digits in the second half of the output only*. (It's more
+#      complicated for the first half of the digits.)
+#  That is, to calculate the Nth digit of output, you do not need to look at any digits prior to the Nth
+#  digit of input. Also, fortunately:
+#   c) the digits that we are interested in, specified by our offset (5977341-5977348), are in the second half of the
 #      input. This may not be true for everyone's unique input.
 #
 # This probably clear if you look at the examples from Part 1 of the problem description. For the last 4 digits of
