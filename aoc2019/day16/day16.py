@@ -49,9 +49,9 @@ values = [int(value) for value in line] * 10000
 for phase in range(100):
     digit_value = 0
     new_values = [int(value) for value in line] * 10000
-    for n in range(len(values) - 1, offset - 1, -1):
-        digit_value += values[n] % 10
+    for digit_pos in range(len(values) - 1, offset - 1, -1):
+        digit_value += (values[digit_pos]) % 10
         digit_value %= 10
-        new_values[n] = digit_value
+        new_values[digit_pos] = digit_value
     values = new_values
 print("".join(str(value) for value in values[offset:(offset + 8)]))
