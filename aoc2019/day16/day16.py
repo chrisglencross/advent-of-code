@@ -4,21 +4,21 @@
 pattern = [0, 1, 0, -1]
 
 
-def pattern_element(digit_pos, term_num):
-    """Returns +1, 0, or -1 as the multiplication factor from the pattern, for the 'term_num'-th term
-    of the 'digit_pos'-th digit. Effectively looking up an element from the repeating transformation matrix by
-    coordinate."""
-    index = (term_num + 1) // (digit_pos + 1)
+def get_multiplication_factor(output_digit_pos, input_digit_pos):
+    """Returns +1, 0, or -1 as the multiplication factor to be applied to a specific input digit, when producing an
+    output digit as a sum of factors of input digits. This is effectively looking up a cell from the transformation
+    matrix, without actually materializing the matrix into a data structure."""
+    index = (input_digit_pos + 1) // (output_digit_pos + 1)
     index = index % len(pattern)
     return pattern[index]
 
 
-def get_output_digit(values, digit_pos):
-    result = 0
-    for term, value in enumerate(values):
-        result += value * pattern_element(digit_pos, term)
-    result = abs(result) % 10
-    return result
+def get_output_digit(input_digits, output_digit_pos):
+    output_digit = 0
+    for input_digit_pos, input_digit in enumerate(input_digits):
+        output_digit += input_digit * get_multiplication_factor(output_digit_pos, input_digit_pos)
+    output_digit = abs(output_digit) % 10
+    return output_digit
 
 
 with open("input.txt") as f:
