@@ -48,7 +48,7 @@ values = [int(value) for value in line] * 10000
 
 for phase in range(100):
     digit_value = 0
-    new_values = [int(value) for value in line] * 10000
+    new_values = [None] * len(values)
     for digit_pos in range(len(values) - 1, offset - 1, -1):
         digit_value += (values[digit_pos]) % 10
         digit_value %= 10
