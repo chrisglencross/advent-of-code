@@ -6,7 +6,8 @@ pattern = [0, 1, 0, -1]
 
 def pattern_element(digit_pos, term_num):
     """Returns +1, 0, or -1 as the multiplication factor from the pattern, for the 'term_num'-th term
-    of the 'digit_pos'-th digit"""
+    of the 'digit_pos'-th digit. Effectively looking up an element from the repeating transformation matrix by
+    coordinate."""
     index = (term_num + 1) // (digit_pos + 1)
     index = index % len(pattern)
     return pattern[index]
@@ -31,7 +32,7 @@ print("".join([str(value) for value in values[0:8]]))
 
 # Part 2 - uses a non-obvious optimisation.
 #
-# This relies on pattern from the transformation rules that:
+# This relies on a pattern from the transformation rules (i.e. multiplier matrix) that:
 #   a) the final digit value of the output is the same as the final digit of the input.
 #   b) the preceding digit of the output is the digit just calculated (i.e for the next digit), plus the digit of the
 #      input in the corresponding position, *for all digits in the second half of the output only*. (It's more
