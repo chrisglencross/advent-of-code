@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 # Advent of code 2019 day 17
-# This is a bit scrappy and requires some manual intervention.
 
 from typing import List
 
