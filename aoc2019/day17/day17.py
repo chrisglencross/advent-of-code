@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 # Advent of code 2019 day 17
+# This is a bit scrappy and requires some manual intervention.
+
 from typing import List
 
 from aoc2019.modules import intcode
@@ -170,7 +172,7 @@ routes = []
 for route in get_route([], location, direction, set([location]), dict()):
     routes.append(route)
     # In our case we can stop after the first one, because it's the best - no unnecessary turns
-    # Enumerating all routes is slow.
+    # Enumerating all routes with all possible turns is very slow.
     break
 
 route_steps = [str(step) for step in routes[0]]
