@@ -110,6 +110,8 @@ def get_possible_turn_directions(location, facing_direction, visited_locations) 
 
 
 def get_route(prefix, location, direction, visited_locations, cycle_detector):
+    cycle_detector = dict(cycle_detector)
+
     # We can have the ability to call 10 functions, each can be 20 characters long
     prefix_str = ",".join([str(step) for step in prefix])
     # print(prefix_str)
@@ -124,7 +126,6 @@ def get_route(prefix, location, direction, visited_locations, cycle_detector):
 
     # If all grid cells visited, done
     if len(visited_locations) == total_scaffold:
-        print(f"Found route of length {len(prefix)}")
         yield prefix
         return
 
@@ -142,6 +143,8 @@ def get_route(prefix, location, direction, visited_locations, cycle_detector):
 
 
 def move_forward(prefix, location, direction, visited_locations, cycle_detector):
+    visited_locations = set(visited_locations)
+
     count = 0
     next_location = move_direction(location, direction)
     while next_location is not None:
@@ -157,7 +160,7 @@ def move_forward(prefix, location, direction, visited_locations, cycle_detector)
         new_prefix[-1] += count
     else:
         new_prefix = prefix + [count]
-    yield from get_route(new_prefix, location, direction, set(visited_locations), dict(cycle_detector))
+    yield from get_route(new_prefix, location, direction, visited_locations, cycle_detector)
 
 
 total_scaffold = sum([1 for value in grid.values() if value in "#O^><v"])
@@ -170,58 +173,113 @@ grid[location] = "#"
 print("Enumerating reasonable routes")
 routes = []
 for route in get_route([], location, direction, set([location]), dict()):
+    print(len(routes), len(route), ",".join([str(step) for step in route]))
     routes.append(route)
     # In our case we can stop after the first one, because it's the best - no unnecessary turns
     # Enumerating all routes with all possible turns is very slow.
     break
 
 route_steps = [str(step) for step in routes[0]]
-print(",".join(route_steps))
-
-# This prints
-# L,10,L,10,R,6,L,10,L,10,R,6,R,12,L,12,L,12,R,12,L,12,L,12,L,6,L,10,R,12,R,12,R,12,L,12,L,12,L,6,L,10,R,12,R,12,R,12,L,12,L,12,L,6,L,10,R,12,R,12,L,10,L,10,R,6
-
-# Find large segments which are candidates to refactor
-sequence_counts = {}
-for start in range(0, len(route_steps)):
-    for end in range(start + 1, len(route_steps)):
-        length = end - start
-        subsequence = ",".join(route_steps[start:end + 1])
-        if len(subsequence) <= 20:
-            sequence_counts[subsequence] = sequence_counts.get(subsequence, 0) + 1
-
-sequence_counts_list = []
-for sequence, count in dict(sequence_counts).items():
-    if count == 1:
-        del sequence_counts[sequence]
-    else:
-        sequence_counts_list.append((sequence, count))
-
-# Likely subsequences that you will want to use
-sequence_counts_list.sort(reverse=True, key=lambda seq: len(seq[0]) * seq[1])
-for seq in sequence_counts_list:
-    print(len(seq[0]) * seq[1], seq)
 
 
-# I manually used these sequences to find the variables to use, in a text editor.
-# Took a couple of mins, quicker than automating.
-# Run the program again to print the solution.
+def find_function_candidates(remaining_segments):
+    """Finds the best candidate functions from the instruction segments. These are the repeating subsequences which are
+    longest and are used the most times."""
+    segment_counts = {}
+    for segment in remaining_segments:
+        for start in range(0, len(segment)):
+            for end in range(start + 1, len(route_steps)):
+                subsegment = tuple(segment[start:end + 1])
+                if len(",".join(subsegment)) <= 20:
+                    segment_counts[subsegment] = segment_counts.get(subsegment, 0) + 1
+
+    result = []
+    for sequence, count in dict(segment_counts).items():
+        if count > 1:
+            result.append((list(sequence), count))
+    result.sort(reverse=True, key=lambda seq: len(seq[0]) * seq[1])
+    return result
+
+
+def find_first_sublist(seq, sublist, start=0):
+    length = len(sublist)
+    for index in range(start, len(seq)):
+        if seq[index:index + length] == sublist:
+            return index, index + length
+
+
+def replace_sublist(seq, sublist, replacement):
+    length = len(replacement)
+    index = 0
+    for start, end in iter(lambda: find_first_sublist(seq, sublist, index), None):
+        seq[start:end] = replacement
+        index = start + length
+
+
+def find_functions(remaining_segments, functions):
+    """Finds the 3 functions which together can replace the input segments. Searches candidate functions using
+    a recursive implementation."""
+    if len(functions) > 3:
+        return None
+    if len(remaining_segments) == 0:
+        return functions
+    if len(functions) == 3:
+        return None
+
+    function_candidates = find_function_candidates(remaining_segments)
+    for i, function_candidate in enumerate(function_candidates):
+        new_functions = list(functions)
+        new_functions.append(function_candidate[0])
+        new_remaining_segments = []
+        for segment in remaining_segments:
+            for start, end in iter(lambda: find_first_sublist(segment, function_candidate[0]), None):
+                if start > 0:
+                    new_remaining_segments.append(segment[0:start])
+                segment = segment[end:]
+            if segment:
+                new_remaining_segments.append(segment)
+        solution = find_functions(new_remaining_segments, new_functions)
+        if solution is not None:
+            return solution
+
+    return None
+
+
+# Identify the functions to use and the sequence of functions to call
+functions = find_functions([route_steps], [])
+named_functions = {}
+function_sequence = list(route_steps)
+for i, function in enumerate(functions):
+    function_name = chr(65 + i)
+    named_functions[function_name] = ",".join(function)
+    replace_sublist(function_sequence, function, function_name)
+
+print(function_sequence)
+print(named_functions)
 
 def encode(value):
     return [ord(c) for c in value] + [10]
 
 
+# Re-run the program with these functions to obtain the answer
 program = intcode.load_file("input.txt", debug=False)
 program.memory[0] = 2
-program.input.extend(encode("B,B,A,A,C,A,C,A,C,B"))
-program.input.extend(encode("R,12,L,12,L,12"))
-program.input.extend(encode("L,10,L,10,R,6"))
-program.input.extend(encode("L,6,L,10,R,12,R,12"))
+program.input.extend(encode(",".join(function_sequence)))
+program.input.extend(encode(named_functions["A"]))
+program.input.extend(encode(named_functions["B"]))
+program.input.extend(encode(named_functions["C"]))
 program.input.extend(encode("n"))
 
 # Print the output - final number is the answer
+result = None
+message = []
 while not program.is_terminated():
     output = program.next_output()
     if output is None:
         break
-    print(output)
+    if output > 255:
+        result = output
+    else:
+        message.append(chr(output))
+print("".join(message))
+print(result)
