@@ -129,8 +129,10 @@ def find_all_routes(direct_distances, start_locations, targets):
     route_states_to_check = [initial_state]
     best_complete_route_length = None
 
-    # Travelling salesman - visit all points in the most efficient order
-    # Fortunately we have locked doors to help limit the exponential nature
+    # Travelling salesman-like problem - shortest route to visit all targets to collect all keys
+    # Fortunately we have locked doors to help limit the exponential nature; implemented as a breadth-first
+    # search with pruning, but it can still take 3-10 minutes for the AoC inputs depending of computer speed..
+    # Unlike a standard travelling salesman, the graph changes during the process as doors become unlocked.
     iterations = 0
     while route_states_to_check:
         shortest_path_cache = dict()
@@ -161,7 +163,7 @@ def find_all_routes(direct_distances, start_locations, targets):
 
         route_states_to_check = new_route_states_to_check
 
-    # We end up with one completed route per final target: less than 5 for all the examples
+    # We can end up with one completed route per distinct final state: less than 5 for all the examples
     # Return all of them sorted by length. We really just need the shortest.
     complete_routes = []
     for best_route in best_routes_by_state.values():
@@ -206,5 +208,5 @@ def part2():
 
 # This is pretty slow... several minutes.
 if __name__ == "__main__":
-    # print("Part 1 elapsed time:", timeit.timeit(part1, number=1))
+    print("Part 1 elapsed time:", timeit.timeit(part1, number=1))
     print("Part 2 elapsed time:", timeit.timeit(part2, number=1))
