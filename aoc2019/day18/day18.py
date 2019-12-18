@@ -1,5 +1,14 @@
 #!/usr/bin/python3
 # Advent of code 2019 day 18
+
+# This implementation works for graphs which contains loops, with multiple paths to a key accessed via different
+# sets of doors. In practice it appears that none of the examples require this. The solution could be considerably
+# simpler and faster, with no need to recalculate fastest routes between points as doors are opened. The distances
+# could instead be computed up-front, and at runtime shortest-path results just need to be filtered to remove those
+# which contain locked doors.
+#
+# This implementation takes several minutes to run, but it could be reduced to seconds.
+
 import timeit
 from dataclasses import dataclass
 from typing import List, Set
@@ -70,7 +79,7 @@ def build_route_graph(direct_distances, collected_items):
 
 @dataclass
 class RouteState:
-    locations: List[str]
+    locations: List[str]  # multiple droid locations for part 2
     route_length: int
     collected_list: List[str]
     targets: Set[str]
@@ -79,12 +88,12 @@ class RouteState:
         return tuple(self.locations), tuple(sorted(self.collected_list))
 
 
-def get_next_route_states(shortest_path_cache, direct_distances, route_state):
+def get_next_route_states(direct_distances, route_state, route_cache):
     result = []
 
     # Try moving droids one at a time
     for droid in range(0, len(route_state.locations)):
-        shortest_paths = find_shortest_paths(shortest_path_cache, direct_distances, route_state, droid)
+        shortest_paths = find_shortest_paths(direct_distances, route_state, droid, route_cache)
 
         # Try navigating to all available keys and doors
         for target in sorted(route_state.targets):
@@ -105,19 +114,29 @@ def get_next_route_states(shortest_path_cache, direct_distances, route_state):
     return result
 
 
-def find_shortest_paths(shortest_path_cache, direct_distances, route_state, droid):
+def find_shortest_paths(direct_distances, route_state, droid, route_cache):
+    # The route_cache is a dictionary into which this function can shove anything.
+    # Use it as a cache of both graphs and routes
 
     location = route_state.locations[droid]
-    collected_keys = sorted([target for target in route_state.collected_list])
-    path_cache_key = (location, tuple(collected_keys))
-    shortest_paths = shortest_path_cache.get(path_cache_key)
+    collected_keys = tuple(sorted([target for target in route_state.collected_list]))
+    path_cache_key = (location, collected_keys)
+    shortest_paths = route_cache.get(path_cache_key)
     if shortest_paths is not None:
         return shortest_paths
 
-    graph = build_route_graph(direct_distances, set(route_state.collected_list))
-    graph.add_node(location)  # If the node is isolated, it won't have any edges. Causes an error.
-    shortest_paths = nx.shortest_path_length(graph, location, None, "distance")
-    shortest_path_cache[path_cache_key] = shortest_paths
+    graph_cache_key = collected_keys
+    graph = route_cache.get(graph_cache_key)
+    if graph is None:
+        graph = build_route_graph(direct_distances, set(route_state.collected_list))
+        route_cache[graph_cache_key] = graph
+
+    if location not in graph.nodes():
+        shortest_paths = {}  # droid has no edges to other nodes
+    else:
+        shortest_paths = nx.shortest_path_length(graph, location, None, "distance")
+
+    route_cache[path_cache_key] = shortest_paths
     return shortest_paths
 
 
@@ -135,7 +154,7 @@ def find_all_routes(direct_distances, start_locations, targets):
     # Unlike a standard travelling salesman, the graph changes during the process as doors become unlocked.
     iterations = 0
     while route_states_to_check:
-        shortest_path_cache = dict()
+        route_cache = dict()  # for preventing repeated unnecessary route calculations
         prune_count = 0
         print(f"Iteration {iterations} has {len(route_states_to_check)} active states to be checked")
         route_states_to_check.sort(key=lambda r: r.route_length)
@@ -145,7 +164,7 @@ def find_all_routes(direct_distances, start_locations, targets):
         iterations += 1
         new_route_states_to_check = []
         for route_state in route_states_to_check:
-            next_route_states = get_next_route_states(shortest_path_cache, direct_distances, route_state)
+            next_route_states = get_next_route_states(direct_distances, route_state, route_cache)
             for next_route_state in next_route_states:
                 if best_complete_route_length and next_route_state.route_length >= best_complete_route_length:
                     prune_count += 1
