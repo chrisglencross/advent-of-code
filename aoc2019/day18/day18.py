@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 # Advent of code 2019 day 18
+import timeit
 from dataclasses import dataclass
 from typing import List, Set
 
@@ -78,12 +79,12 @@ class RouteState:
         return tuple(self.locations), tuple(sorted(self.collected_list))
 
 
-def get_next_route_states(direct_distances, route_state):
+def get_next_route_states(shortest_path_cache, direct_distances, route_state):
     result = []
 
     # Try moving droids one at a time
     for droid in range(0, len(route_state.locations)):
-        shortest_paths = find_shortest_paths(direct_distances, route_state, droid)
+        shortest_paths = find_shortest_paths(shortest_path_cache, direct_distances, route_state, droid)
 
         # Try navigating to all available keys and doors
         for target in sorted(route_state.targets):
@@ -104,11 +105,19 @@ def get_next_route_states(direct_distances, route_state):
     return result
 
 
-def find_shortest_paths(direct_distances, route_state, droid):
+def find_shortest_paths(shortest_path_cache, direct_distances, route_state, droid):
+
     location = route_state.locations[droid]
+    collected_keys = sorted([target for target in route_state.collected_list])
+    path_cache_key = (location, tuple(collected_keys))
+    shortest_paths = shortest_path_cache.get(path_cache_key)
+    if shortest_paths is not None:
+        return shortest_paths
+
     graph = build_route_graph(direct_distances, set(route_state.collected_list))
     graph.add_node(location)  # If the node is isolated, it won't have any edges. Causes an error.
     shortest_paths = nx.shortest_path_length(graph, location, None, "distance")
+    shortest_path_cache[path_cache_key] = shortest_paths
     return shortest_paths
 
 
@@ -124,8 +133,9 @@ def find_all_routes(direct_distances, start_locations, targets):
     # Fortunately we have locked doors to help limit the exponential nature
     iterations = 0
     while route_states_to_check:
+        shortest_path_cache = dict()
         prune_count = 0
-        print(f"Iteration {iterations} has {len(route_states_to_check)} active states")
+        print(f"Iteration {iterations} has {len(route_states_to_check)} active states to be checked")
         route_states_to_check.sort(key=lambda r: r.route_length)
         # for x in route_states_to_check:
         #     print(f"    {x.get_state_key()} {x.route_length}")
@@ -133,7 +143,7 @@ def find_all_routes(direct_distances, start_locations, targets):
         iterations += 1
         new_route_states_to_check = []
         for route_state in route_states_to_check:
-            next_route_states = get_next_route_states(direct_distances, route_state)
+            next_route_states = get_next_route_states(shortest_path_cache, direct_distances, route_state)
             for next_route_state in next_route_states:
                 if best_complete_route_length and next_route_state.route_length >= best_complete_route_length:
                     prune_count += 1
@@ -151,10 +161,13 @@ def find_all_routes(direct_distances, start_locations, targets):
 
         route_states_to_check = new_route_states_to_check
 
+    # We end up with one completed route per final target: less than 5 for all the examples
+    # Return all of them sorted by length. We really just need the shortest.
     complete_routes = []
     for best_route in best_routes_by_state.values():
         if all_keys.issubset(best_route.collected_list):
             complete_routes.append(best_route)
+    complete_routes.sort(key=lambda r: r.route_length)
     return complete_routes
 
 
@@ -176,22 +189,22 @@ def load_grid(file):
     return grid, start_locations, target_locations
 
 
-def part1():
-    grid, start_locations, target_locations = load_grid("input_part1.txt")
+def process_file(input_file):
+    grid, start_locations, target_locations = load_grid(input_file)
     direct_distances = get_all_direct_distances(grid, start_locations, target_locations)
-    results = find_all_routes(direct_distances, "0", set(target_locations.keys()))
-    results.sort(key=lambda r: r.route_length)
+    results = find_all_routes(direct_distances, list(start_locations.keys()), set(target_locations.keys()))
     print(results[0].route_length)
+
+
+def part1():
+    process_file("input_part1.txt")
 
 
 def part2():
-    grid, start_locations, target_locations = load_grid("input_part2.txt")
-    direct_distances = get_all_direct_distances(grid, start_locations, target_locations)
-    results = find_all_routes(direct_distances, [str(start) for start in range(0, 4)], set(target_locations.keys()))
-    results.sort(key=lambda r: r.route_length)
-    print(results[0].route_length)
+    process_file("input_part2.txt")
 
 
 # This is pretty slow... several minutes.
-# part1()
-part2()
+if __name__ == "__main__":
+    # print("Part 1 elapsed time:", timeit.timeit(part1, number=1))
+    print("Part 2 elapsed time:", timeit.timeit(part2, number=1))
