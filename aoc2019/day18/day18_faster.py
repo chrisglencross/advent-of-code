@@ -140,6 +140,7 @@ def find_all_routes(route_cache, start_locations, targets):
     # Travelling salesman-like problem - shortest route to visit all targets (i.e. to collect all keys)
     # Fortunately we have locked doors to help limit the exponential nature; implemented as a breadth-first
     # search with pruning, but it can still take 1-2 minutes for part 2, depending on speed.
+    # Could maybe be better with depth-first? Allows a best_complete_route_length to be found sooner, for pruning.
     iterations = 0
     while route_states_to_check:
         prune_count = 0
