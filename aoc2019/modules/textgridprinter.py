@@ -21,8 +21,7 @@ class TextGridPrinter:
                     symbol = symbol[0]
                 row.append(symbol)
             line = "".join(row)
-            if line.strip():
-                print(line)
+            print(line)
 
     def close(self):
         pass
