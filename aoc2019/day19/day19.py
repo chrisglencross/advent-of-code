@@ -21,7 +21,6 @@ def part1():
     for y in range(0, 50):
         for x in range(0, 50):
             if is_in_grid(x, y):
-                print(x, y)
                 total += 1
                 grid[(x, y)] = "#"
             else:
@@ -91,5 +90,5 @@ def part2():
                 return left_x * 10000 + top_y
 
 
-print(part1())
-print(part2())
+print("Part 1:", part1())
+print("Part 2:", part2())
