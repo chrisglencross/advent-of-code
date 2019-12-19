@@ -14,7 +14,6 @@ moves = {
 def parse_grid(grid_cells):
     grid = {}
     for y, line in enumerate([line for line in grid_cells.split("\n") if line.strip()]):
-        print(y, line)
         for x, char in enumerate(line):
             grid[(x, y)] = char
     return grid
