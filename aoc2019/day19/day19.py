@@ -81,7 +81,6 @@ def part2():
             bottom_y = top_y + 99
             if is_in_grid(left_x, bottom_y) and is_in_grid(right_x, top_y):
                 assert is_in_grid(left_x, top_y)
-                assert is_in_grid(right_x, top_y)
                 assert is_in_grid(right_x, bottom_y)
                 assert not is_in_grid(right_x + 1, top_y)
                 assert not is_in_grid(right_x, top_y - 1)
