@@ -1,11 +1,13 @@
 #!/usr/bin/python3
 # Advent of code 2019 day 20
+import networkx as nx
 
-from aoc2019.modules.maze import *
+from aoc2019.modules.directions import COMPASS_DIRECTIONS
+from aoc2019.modules.grid import load_grid
 
 
 def is_outer_portal(grid, portal):
-    (min_x, min_y), (max_x, max_y) = get_grid_limits(grid)
+    (min_x, min_y), (max_x, max_y) = grid.get_bounds()
     return abs(portal[0] - max_x) <= 2 or abs(portal[0] - min_x) <= 2 \
            or abs(portal[1] - max_y) <= 2 or abs(portal[1] - min_y) <= 2
 
@@ -17,8 +19,8 @@ def find_portals(grid):
     for coord, cell in grid.items():
         if cell == ".":
             for direction in COMPASS_DIRECTIONS.values():
-                label1 = move_location(coord, direction)
-                label2 = move_location(label1, direction)
+                label1 = direction.move(coord)
+                label2 = direction.move(label1)
                 label1, label2 = sorted([label1, label2])
                 if grid.get(label1) and grid.get(label2):
                     label = grid.get(label1) + grid.get(label2)
@@ -37,7 +39,7 @@ def print_portals_traversed(graph: nx.DiGraph, route):
     edges = dict(graph.edges)
     for step_no, move_to in enumerate(route[1:]):
         move_from = route[step_no]
-        edge_data = edges[(move_from, move_to)]
+        edge_data = graph.get_edge_data(move_from, move_to)
         if edge_data and "portal" in edge_data:
             portals.append(edge_data["portal"])
     print("Route:", ", ".join(portals))
@@ -45,12 +47,12 @@ def print_portals_traversed(graph: nx.DiGraph, route):
 
 def part1():
     grid = load_grid("input.txt")
-    graph = build_digraph(grid)
+    grid.print()
+    graph = grid.build_nxgraph()
     portals = find_portals(grid)
     for portal_name, portal_coords in portals.items():
         if portal_coords[0] and portal_coords[1]:
             graph.add_edge(portal_coords[0], portal_coords[1], portal=portal_name, distance=1)
-            graph.add_edge(portal_coords[1], portal_coords[0], portal=portal_name, distance=1)
     start = portals["AA"][0]
     end = portals["ZZ"][0]
     path = nx.shortest_path(graph, start, end, weight="distance")
@@ -59,24 +61,21 @@ def part1():
 
 
 def part2():
-    grid = load_grid("input.txt")
-    portals = find_portals(grid)
+    maze = load_grid("input.txt")
+    portals = find_portals(maze)
     max_depth = len(portals) + 1
 
     # Build a graph with each node in 3d space
     # Would be more efficient to take the graph from part 1 and just add portal-to-portal edges, but this completes
     # in less than 30 seconds so not necessary.
-    graph = nx.DiGraph()
-    for inception in range(0, max_depth):
-        for loc, cell in grid.items():
-            graph.add_node((inception, loc), symbol=cell)
-        for loc, cell in grid.items():
-            if cell in {"."}:
-                for direction in COMPASS_DIRECTIONS.values():
-                    neighbour_loc = move_location(loc, direction)
-                    if grid.get(neighbour_loc) in {"."}:
-                        graph.add_edge((inception, loc), (inception, neighbour_loc), direction=direction, distance=1)
 
+    graph = nx.Graph()
+
+    # Build multiple sub-graphs, one for each inception level, with a depth on each node
+    for inception in range(0, max_depth):
+        maze.add_nxgraph_edges(graph, node_factory=lambda coords: (inception, coords))
+
+    # Add the edges between levels
     for portal_name, portal_coords in portals.items():
         if portal_coords[0] and portal_coords[1]:
             for inception in range(0, max_depth):

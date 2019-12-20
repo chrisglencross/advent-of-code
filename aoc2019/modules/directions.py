@@ -1,0 +1,37 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Tuple, Dict
+
+
+@dataclass
+class Direction:
+    name: str
+    left_name: str
+    right_name: str
+    delta: Tuple[int, int] = field(default_factory=None)
+    directions: Dict[str, object] = field(default_factory=None)
+
+    def move(self, from_location):
+        return from_location[0] + self.delta[0], from_location[1] + self.delta[1]
+
+    def turn_left(self):
+        return self.directions[self.left_name]
+
+    def turn_right(self):
+        return self.directions[self.right_name]
+
+    def reverse(self) -> Direction:
+        return self.turn_right().turn_right()
+
+
+# Directions with left and right turns
+COMPASS_DIRECTIONS = {}
+COMPASS_DIRECTIONS["N"] = Direction(name="N", delta=(0, -1), left_name="W", right_name="E",
+                                    directions=COMPASS_DIRECTIONS)
+COMPASS_DIRECTIONS["E"] = Direction(name="E", delta=(1, 0), left_name="N", right_name="S",
+                                    directions=COMPASS_DIRECTIONS)
+COMPASS_DIRECTIONS["S"] = Direction(name="S", delta=(0, 1), left_name="E", right_name="W",
+                                    directions=COMPASS_DIRECTIONS)
+COMPASS_DIRECTIONS["W"] = Direction(name="W", delta=(-1, 0), left_name="S", right_name="N",
+                                    directions=COMPASS_DIRECTIONS)
