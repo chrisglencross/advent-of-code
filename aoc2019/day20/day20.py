@@ -48,7 +48,7 @@ def part1():
     graph = build_digraph(grid)
     portals = find_portals(grid)
     for portal_name, portal_coords in portals.items():
-        if len(portal_coords) == 2:
+        if portal_coords[0] and portal_coords[1]:
             graph.add_edge(portal_coords[0], portal_coords[1], portal=portal_name, distance=1)
             graph.add_edge(portal_coords[1], portal_coords[0], portal=portal_name, distance=1)
     start = portals["AA"][0]
