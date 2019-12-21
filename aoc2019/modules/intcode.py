@@ -118,6 +118,12 @@ class Program:
     jump_targets: Set[int] = field(default_factory=set)
     relative_base_addr: Set[int] = field(default_factory=set)
 
+    def append_ascii_input(self, value):
+        self.input.extend([ord(c) for c in value] + [10])
+
+    def append_ascii_input_lines(self, values):
+        for value in values:
+            self.append_ascii_input(value)
 
     def snapshot(self):
         return Program(memory=dict(self.memory), pc=self.pc)
@@ -135,6 +141,22 @@ class Program:
             return self.output.pop()
         else:
             return None
+
+    def next_ascii_output(self):
+        if self.is_terminated() or self.is_blocked():
+            return None
+        message = []
+        while True:
+            output = self.next_output()
+            if output is None:
+                break
+            elif 1 <= output <= 127:
+                message.append(chr(output))
+            else:
+                # Non-ascii - put it back for the next reader
+                self.output.insert(0, output)
+                break
+        return "".join(message)
 
     def run(self, limit=None):
         count = 0
