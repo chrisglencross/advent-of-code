@@ -3,19 +3,14 @@
 
 # Faster version which doesn't work with graphs containing cycles.
 # On my laptop part 1 takes 30 seconds, vs. 135 seconds with the previous version.
-
+import string
 import timeit
 from dataclasses import dataclass
 from typing import List, Set
 
 import networkx as nx
 
-DIRECTIONS = {
-    "north": (0, -1),
-    "east": (1, 0),
-    "south": (0, 1),
-    "west": (-1, 0),
-}
+from aoc2019.modules.grid import load_grid
 
 
 @dataclass
@@ -35,77 +30,50 @@ class RouteInfo:
     route_len: int
 
 
-def get_neighbours(x, y):
-    result = set()
-    for move in DIRECTIONS.values():
-        result.add((x + move[0], y + move[1]))
-    return result
-
-
 def find_direct_distances(grid, start_location):
-    route_lengths = {}
-    check_neighbours = set()
-    route_lengths[start_location] = 0
-    check_neighbours.add(start_location)
-    while check_neighbours:
-        next_check_neighbours = set()
-        for location in list(check_neighbours):
-            location_distance = route_lengths[location]
-            for neighbour in get_neighbours(location[0], location[1]):
-                if neighbour in route_lengths.keys():
-                    continue
-                if grid[neighbour] == "#":
-                    continue
-                route_lengths[neighbour] = location_distance + 1
-                if grid[neighbour] == "." or grid[neighbour].isdigit():
-                    next_check_neighbours.add(neighbour)
-        check_neighbours = next_check_neighbours
-    return route_lengths
+    """Returns distances of all cells directly reachable from start_location without moving beyond any key or door."""
+
+    def custom_is_navigable(grid, from_coords, to_coords):
+        return (from_coords == start_location or grid[from_coords] in string.digits + ".") \
+               and grid[to_coords] not in "#"
+
+    graph = grid.build_digraph(is_navigable=custom_is_navigable)
+    return nx.shortest_path_length(graph, start_location, None, weight="distance")
 
 
-def get_all_direct_distances(grid, start_locations, target_locations):
-    """This is used to create a cache of the distances between all directly navigable
-    (i.e. without moving through another object) objects of interest. Uses a possibly inefficient flood fill, but
-    only used once on start-up. This is used to build a networkx graph for the proper route finding.."""
-    direct_distances = dict()
+def build_route_graph(grid, start_locations, target_locations):
+    """Creates a graph of navigable objects in the graph."""
+    graph = nx.DiGraph()
     for from_target, from_location in sorted(list(target_locations.items()) + list(start_locations.items())):
         route_lengths = find_direct_distances(grid, from_location)
         for to_target, to_location in sorted(target_locations.items()):
             distance = route_lengths.get(to_location)
-            if distance is not None:
-                direct_distances[(from_target, to_target)] = distance
-    return direct_distances
-
-
-def build_route_graph(direct_distances):
-    graph = nx.DiGraph()
-    for (from_target, to_target), distance in direct_distances.items():
-        if to_target.isdigit():
-            # No point heading back to a start location
-            continue
-        graph.add_edge(from_target, to_target, distance=distance)
+            if distance is not None and not to_target.isdigit():
+                graph.add_edge(from_target, to_target, distance=distance)
     return graph
 
 
 def get_next_route_states(route_state, route_cache):
+    """Given a state of objects in the maze, returns the next set of possible states"""
     result = []
 
-    # Try moving all droids
+    # Try moving all droids one at a time
     for droid in range(0, len(route_state.locations)):
 
-        # Try navigating to all available keys and doors
+        # Try navigating to all reachable keys and doors
         for target in route_state.targets:
 
             if target.isupper() and target.lower() in route_state.targets:
-                # Will not navigate to a door if we do not have the key
+                # Target is a door, and we have not yet collected the key. Don't go there.
                 continue
 
-            # Cannot navigate to anything if there's no route
             route_info = route_cache.get((route_state.locations[droid], target))
             if route_info is None:
+                # No route to this target (part 2, fully partitioned grid)
                 continue
-            # Cannot or will not navigate route if there is an intermediate target in the way that we haven't collected
             if not route_state.targets.isdisjoint(route_info.path[1:-1]):
+                # Don't follow route if there is an intermediate target in the path that we haven't collected
+                # - we will already return a RouteState to go to that intermediate target
                 continue
 
             # Create a new state object representing the moved droid and its effects
@@ -121,11 +89,11 @@ def get_next_route_states(route_state, route_cache):
     return result
 
 
-def path_length(G, path, weight):
+def path_length(graph, path):
     length = 0
     for i, node in enumerate(path[1:]):
         prev = path[i]
-        length += G[prev][node][weight]
+        length += graph[prev][node]["distance"]
     return length
 
 
@@ -139,8 +107,7 @@ def find_all_routes(route_cache, start_locations, targets):
 
     # Travelling salesman-like problem - shortest route to visit all targets (i.e. to collect all keys)
     # Fortunately we have locked doors to help limit the exponential nature; implemented as a breadth-first
-    # search with pruning, but it can still take 1-2 minutes for part 2, depending on speed.
-    # Could maybe be better with depth-first? Allows a best_complete_route_length to be found sooner, for pruning.
+    # search with pruning, but it can still take 1-3 minutes for part 2, depending on computer speed.
     iterations = 0
     while route_states_to_check:
         prune_count = 0
@@ -180,33 +147,22 @@ def find_all_routes(route_cache, start_locations, targets):
     return complete_routes
 
 
-def load_grid(file):
-    grid = {}
-    start_locations = {}
-    target_locations = {}
-    with open(file) as f:
-        lines = f.readlines()
-    for y, line in enumerate(lines):
-        for x, cell in enumerate(line.strip()):
-            grid[(x, y)] = cell
-            if cell == "@":
-                start_symbol = str(len(start_locations))
-                start_locations[start_symbol] = (x, y)
-                grid[(x, y)] = start_symbol
-            elif cell.isalpha():
-                target_locations[cell] = (x, y)
-    return grid, start_locations, target_locations
-
-
 def process_file(input_file):
-    grid, start_locations, target_locations = load_grid(input_file)
-    direct_distances = get_all_direct_distances(grid, start_locations, target_locations)
+    # Load the file
+    grid = load_grid(input_file)
 
-    graph = build_route_graph(direct_distances)
+    # Replace @ with a digit (part 2 has multiple droids)
+    for droid, location in enumerate(grid.find_cells("@")):
+        grid[location] = str(droid)
+    start_locations = grid.index_cells(string.digits)
+    target_locations = grid.index_cells(string.ascii_letters)
+
+    # Pre-calculate and cache the path and distance between all pairs of objects
+    graph = build_route_graph(grid, start_locations, target_locations)
     route_cache = dict()
     for source, target_path in nx.shortest_path(graph, None, None, "distance").items():
         for target, path in target_path.items():
-            route_cache[(source, target)] = RouteInfo(path, path_length(graph, path, "distance"))
+            route_cache[(source, target)] = RouteInfo(path, path_length(graph, path))
 
     results = find_all_routes(route_cache, list(start_locations.keys()), set(target_locations.keys()))
     print(results[0].route_length)
