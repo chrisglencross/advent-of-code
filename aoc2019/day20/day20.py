@@ -36,7 +36,6 @@ def find_portals(grid):
 
 def print_portals_traversed(graph: nx.DiGraph, route):
     portals = []
-    edges = dict(graph.edges)
     for step_no, move_to in enumerate(route[1:]):
         move_from = route[step_no]
         edge_data = graph.get_edge_data(move_from, move_to)
@@ -48,7 +47,7 @@ def print_portals_traversed(graph: nx.DiGraph, route):
 def part1():
     grid = load_grid("input.txt")
     grid.print()
-    graph = grid.build_nxgraph()
+    graph = grid.build_graph()
     portals = find_portals(grid)
     for portal_name, portal_coords in portals.items():
         if portal_coords[0] and portal_coords[1]:
@@ -73,7 +72,7 @@ def part2():
 
     # Build multiple sub-graphs, one for each inception level, with a depth on each node
     for inception in range(0, max_depth):
-        maze.add_nxgraph_edges(graph, node_factory=lambda coords: (inception, coords))
+        maze.add_graph_edges(graph, node_factory=lambda coords: (inception, coords))
 
     # Add the edges between levels
     for portal_name, portal_coords in portals.items():

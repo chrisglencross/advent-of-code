@@ -10,8 +10,8 @@ from aoc2019.modules.directions import COMPASS_DIRECTIONS
 Coords = Tuple[int, int]
 
 
-def default_is_navigable(from_symbol: str, to_symbol: str):
-    return from_symbol in {"."} and to_symbol in {"."}
+def default_is_navigable(grid: Grid, from_coord: Coords, to_coord: Coords):
+    return grid[from_coord] in {"."} and grid[to_coord] in {"."}
 
 
 def default_node_factory(coords):
@@ -71,6 +71,9 @@ class Grid:
     def keys(self):
         return self.grid.keys()
 
+    def values(self):
+        return self.grid.values()
+
     def get(self, coords: Coords, default_value=None):
         return self.grid.get(coords, default_value)
 
@@ -80,25 +83,32 @@ class Grid:
     def __setitem__(self, coords: Coords, cell: str):
         self.grid[coords] = cell
 
-    def build_nxgraph(self,
-                      directions=COMPASS_DIRECTIONS.values(),
-                      node_factory=default_node_factory,
-                      is_navigable=default_is_navigable) -> nx.Graph:
+    def build_graph(self,
+                    directions=COMPASS_DIRECTIONS.values(),
+                    node_factory=default_node_factory,
+                    is_navigable=default_is_navigable) -> nx.Graph:
         graph = nx.Graph()
-        self.add_nxgraph_edges(graph, directions, node_factory, is_navigable)
+        self.add_graph_edges(graph, directions, node_factory, is_navigable)
         return graph
 
-    def add_nxgraph_edges(self, graph: nx.Graph,
-                          directions=COMPASS_DIRECTIONS.values(),
-                          node_factory=default_node_factory,
-                          is_navigable=default_is_navigable):
+    def build_digraph(self,
+                      directions=COMPASS_DIRECTIONS.values(),
+                      node_factory=default_node_factory,
+                      is_navigable=default_is_navigable) -> nx.DiGraph:
+        graph = nx.DiGraph()
+        self.add_graph_edges(graph, directions, node_factory, is_navigable)
+        return graph
+
+    def add_graph_edges(self, graph: nx.Graph,
+                        directions=COMPASS_DIRECTIONS.values(),
+                        node_factory=default_node_factory,
+                        is_navigable=default_is_navigable):
         for from_coords, from_symbol in self.items():
             from_node = node_factory(from_coords)
-            # graph.add_node(from_loc, symbol=from_symbol)
             for direction in directions:
                 to_coords = direction.move(from_coords)
                 to_symbol = self.get(to_coords)
-                if to_symbol and is_navigable(from_symbol, to_symbol):
+                if to_symbol and is_navigable(self, from_coords, to_coords):
                     to_node = node_factory(to_coords)
                     graph.add_edge(from_node, to_node, distance=1)
 
@@ -106,11 +116,16 @@ class Grid:
         textgridprinter.TextGridPrinter().print(self)
 
 
-def load_grid(file: str) -> Grid:
+def parse_grid(content: str) -> Grid:
     grid = {}
-    with open(file) as f:
-        lines = f.readlines()
-    for y, line in enumerate(lines):
+    for y, line in enumerate(content.split("\n")):
         for x, cell in enumerate(line.rstrip()):
             grid[(x, y)] = cell
     return Grid(grid)
+
+
+def load_grid(file: str) -> Grid:
+    grid = {}
+    with open(file) as f:
+        content = f.read()
+    return parse_grid(content)

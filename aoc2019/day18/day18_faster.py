@@ -148,10 +148,9 @@ def find_all_routes(route_cache, start_locations, targets):
 
 
 def process_file(input_file):
-    # Load the file
     grid = load_grid(input_file)
 
-    # Replace @ with a digit (part 2 has multiple droids)
+    # Replace @ droid with a digit (part 2 has multiple droids)
     for droid, location in enumerate(grid.find_cells("@")):
         grid[location] = str(droid)
     start_locations = grid.index_cells(string.digits)
@@ -159,11 +158,12 @@ def process_file(input_file):
 
     # Pre-calculate and cache the path and distance between all pairs of objects
     graph = build_route_graph(grid, start_locations, target_locations)
-    route_cache = dict()
+    route_cache = {}
     for source, target_path in nx.shortest_path(graph, None, None, "distance").items():
         for target, path in target_path.items():
             route_cache[(source, target)] = RouteInfo(path, path_length(graph, path))
 
+    # Do the business and print the shortest result
     results = find_all_routes(route_cache, list(start_locations.keys()), set(target_locations.keys()))
     print(results[0].route_length)
 
