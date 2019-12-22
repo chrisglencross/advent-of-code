@@ -181,11 +181,19 @@ B = shuffle_expression[2][0] % deck_len
 #              https://www.geeksforgeeks.org/multiplicative-inverse-under-modulo-m/
 B_inverse = mod_inverse(B, deck_len)
 
-# We now need to apply "prev_card_pos = (new_card_pos * B_inverse) - (A * B_inverse)" iteratively approximately 10^14
-# times (see iterations variable). We can't do that. This is the point where I got stuck and looked at the subreddit
+# The function "prev_card_pos = (new_card_pos * B_inverse) - (A * B_inverse)" tells us where a card in position
+# new_card_pos was before the shuffle.
+#
+# We now need to apply this function repeatedly approximately 10^14 times (see iterations variable) to find where the
+# card was before that many shuffles. We can't do that. This is the point where I got stuck and looked at the subreddit
 # (cheat!) to get some help with the maths of turning this series into a simple calculation.
+#
 # This link explains: https://www.nayuki.io/page/fast-skipping-in-a-linear-congruential-generator
+# In summary, for a generator function of the form f(x) = (a*x + b) % m, where a, b and m are constants, this method
+# allows us to calculate the result of recursively calling this function n times, in constant time.
+# For example, f(f(f(f(f(x))))) has n=5.
 
+# Set up input variables
 a = B_inverse
 b = -A * B_inverse
 m = deck_len
