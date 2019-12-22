@@ -119,17 +119,6 @@ def simplify_expression(expression):
     return l, op, r
 
 
-def expression_str(expression):
-    if type(expression) is int:
-        return str(expression)
-    elif type(expression) is str:
-        return expression
-    elif type(expression) is tuple:
-        return "(" + expression_str(expression[0]) + " " + expression[1] + " " + expression_str(expression[2]) + ")"
-    else:
-        raise Exception("Bad expression: " + expression)
-
-
 def shuffle(deck):
     """Follows instructions to shuffle the deck, and returns the shuffled deck. It also returns an algebraic expression
     to be used in part 2 that calculates the output position of the shuffle for any given input position. The expression
@@ -164,8 +153,8 @@ def shuffle(deck):
 
 # Part 1
 initial_deck = list(range(0, 10007))
-deck, shuffle_expression = shuffle(initial_deck)
-print("Part 1", deck.index(2019))
+shuffled_deck, shuffle_expression = shuffle(initial_deck)
+print("Part 1", shuffled_deck.index(2019))
 
 # Part 2
 iterations = 101741582076661
@@ -178,7 +167,7 @@ card_pos = 2020
 assert shuffle_expression == (-3477865808702686900085753959259001600827908176407381603684399670, '+',
                               (479266488811915049360163333705199628427569459248496640000000, '*', 'c'))
 
-# All arithmetic using A and B are modulo the deck length, so we can modulo A and B by the deck length
+# All arithmetic using A and B are modulo the deck length. We can modulo A and B by the deck length now.
 # https://en.wikipedia.org/wiki/Modulo_operation#Properties_(identities)
 A = shuffle_expression[0] % deck_len
 B = shuffle_expression[2][0] % deck_len
@@ -193,10 +182,10 @@ B = shuffle_expression[2][0] % deck_len
 #              https://www.geeksforgeeks.org/multiplicative-inverse-under-modulo-m/
 B_inverse = mod_inverse(B, deck_len)
 
-# We now need to apply "prev_card_pos = (new_card_pos-a) * B_inverse" iteratively approximately 10^14 times,
-# see iterations variable. We can't do that. This is the point where I got stuck and looked at the subreddit (cheat!)
-# to find this link: https://www.nayuki.io/page/fast-skipping-in-a-linear-congruential-generator
-# I think I did pretty well to get this far with my modulo arithmetic!
+# We now need to apply "prev_card_pos = (new_card_pos * B_inverse) - (A * B_inverse)" iteratively approximately 10^14
+# times (see iterations variable). We can't do that. This is the point where I got stuck and looked at the subreddit
+# (cheat!) to get some help with the maths of turning this series into a simple calculation.
+# This link explains: https://www.nayuki.io/page/fast-skipping-in-a-linear-congruential-generator
 
 a = B_inverse
 b = -A * B_inverse
