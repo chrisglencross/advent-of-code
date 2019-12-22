@@ -209,6 +209,9 @@ card_pos = 2020
 # You'll want to remove or change this assertion for your personal inputs...
 assert shuffle_expression == (-3477865808702686900085753959259001600827908176407381603684399670, '+',
                               (479266488811915049360163333705199628427569459248496640000000, '*', 'c'))
+
+# All arithmetic using A and B are modulo the deck length, so we can modulo A and B by the deck length
+# https://en.wikipedia.org/wiki/Modulo_operation#Properties_(identities)
 A = shuffle_expression[0] % deck_len
 B = shuffle_expression[2][0] % deck_len
 
