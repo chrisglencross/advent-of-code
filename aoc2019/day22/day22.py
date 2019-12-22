@@ -4,11 +4,18 @@
 from typing import List
 
 
+# The _expr functions return an expression tree node for calculating the output position in the deck from a given
+# input position. Input positions can be other expressions, in which case the resultant expression will be a tree.
+# Expression results should be evaluated modulo the deck size. All expression tree nodes are tuples of the form
+# (int_value, operator, expression) except for the leaf tuple representing the input value which is a
+# string "c". This makes optimising the expression tree easier.
+
+
 def deal_into_new_stack(deck: List):
     return list(reversed(deck))
 
 
-def deal_into_new_stack_output_pos_fn(input_pos):
+def deal_into_new_stack_expr(input_pos):
     return -1, '-', input_pos
 
 
@@ -16,7 +23,7 @@ def cut(deck: List, n: int):
     return deck[n:] + deck[0:n]
 
 
-def cut_output_pos_fn(n, input_pos):
+def cut_expr(n, input_pos):
     return -n, "+", input_pos
 
 
@@ -30,7 +37,7 @@ def deal_with_increment(deck: List, n: int):
     return new_deck
 
 
-def deal_with_increment_output_pos_fn(n, input_pos):
+def deal_with_increment_expr(n, input_pos):
     return n, '*', input_pos
 
 
@@ -166,15 +173,15 @@ def shuffle(deck):
         line = line.strip()
         if line.startswith("deal into new stack"):
             deck = deal_into_new_stack(deck)
-            expression = deal_into_new_stack_output_pos_fn(expression)
+            expression = deal_into_new_stack_expr(expression)
         elif line.startswith("cut"):
             n = int(line.split(" ")[-1])
             deck = cut(deck, n)
-            expression = cut_output_pos_fn(n, expression)
+            expression = cut_expr(n, expression)
         elif line.startswith("deal with increment"):
             n = int(line.split(" ")[-1])
             deck = deal_with_increment(deck, n)
-            expression = deal_with_increment_output_pos_fn(n, expression)
+            expression = deal_with_increment_expr(n, expression)
 
         # Assertions in preparation for part 2
         # Check that we can build an expression which calculates the correct position algebraically
