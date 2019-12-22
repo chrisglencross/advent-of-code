@@ -69,25 +69,24 @@ def invert_plus_minus(symbol):
 
 def evaluate_expression(expression, deck_len, start_pos):
     if type(expression) is int:
-        result = expression
-    elif type(expression) is str and expression == "c":
-        result = start_pos
+        return expression
+    elif expression == "c":
+        # c is the variable representing the card start position
+        return start_pos % deck_len
     elif type(expression) is tuple:
-        if expression[1] == "+":
-            result = evaluate_expression(expression[0], deck_len, start_pos) + evaluate_expression(expression[2],
-                                                                                                   deck_len, start_pos)
-        elif expression[1] == "-":
-            result = evaluate_expression(expression[0], deck_len, start_pos) - evaluate_expression(expression[2],
-                                                                                                   deck_len, start_pos)
+        lhs = evaluate_expression(expression[0], deck_len, start_pos)
+        op = expression[1]
+        rhs = evaluate_expression(expression[2], deck_len, start_pos)
+        if op == "+":
+            return (lhs + rhs) % deck_len
+        elif op == "-":
+            return (lhs - rhs) % deck_len
         elif expression[1] == "*":
-            result = evaluate_expression(expression[0], deck_len, start_pos) * evaluate_expression(expression[2],
-                                                                                                   deck_len, start_pos)
+            return (lhs * rhs) % deck_len
         else:
-            raise Exception("Bad operator " + expression[1])
+            raise Exception(f"Bad operator {expression[1]}")
     else:
-        raise Exception("Bad expression: " + expression)
-
-    return result % deck_len
+        raise Exception(f"Bad expression: {expression}")
 
 
 def simplify_expression(expression):
@@ -95,28 +94,28 @@ def simplify_expression(expression):
     if type(expression) is not tuple:
         return expression
 
-    l = simplify_expression(expression[0])
+    lhs = simplify_expression(expression[0])
     op = expression[1]
-    r = simplify_expression(expression[2])
+    rhs = simplify_expression(expression[2])
 
-    if type(l) is int and type(r) is tuple and type(r[0] is int):
+    if type(lhs) is int and type(rhs) is tuple and type(rhs[0] is int):
         # Simplify (a op1 (b op2 E)) where a, b are integers
-        r_op = r[1]
-        if op == "*" and r_op == "*":
+        op2 = rhs[1]
+        if op == "*" and op2 == "*":
             # a * (b * E) => (a * b) * E
-            return simplify_expression((l * r[0], '*', r[2]))
-        elif op == "*" and r_op in "-+":
+            return simplify_expression((lhs * rhs[0], '*', rhs[2]))
+        elif op == "*" and op2 in "-+":
             # a * (b [+-] E) => a*b [+-] a*E
-            return simplify_expression((l * r[0], r_op, (l, '*', r[2])))
-        elif op in "+" and r_op in "+-":
+            return simplify_expression((lhs * rhs[0], op2, (lhs, '*', rhs[2])))
+        elif op in "+" and op2 in "+-":
             # a + (b [+-] E) => (a+b) [+-] E
-            return simplify_expression((l + r[0], r_op, r[2]))
-        elif op == "-" and r_op in "+-":
+            return simplify_expression((lhs + rhs[0], op2, rhs[2]))
+        elif op == "-" and op2 in "+-":
             # a - (b [+-] E) => (a-b) [-+] E
-            return simplify_expression((l - r[0], invert_plus_minus(r_op), r[2]))
+            return simplify_expression((lhs - rhs[0], invert_plus_minus(op2), rhs[2]))
 
     # No other simplifications required
-    return l, op, r
+    return lhs, op, rhs
 
 
 def shuffle(deck):
