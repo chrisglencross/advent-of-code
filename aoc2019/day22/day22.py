@@ -193,7 +193,7 @@ B_inverse = mod_inverse(B, deck_len)
 # allows us to calculate the result of recursively calling this function n times, in constant time.
 # For example, f(f(f(f(f(x))))) has n=5.
 
-# Set up input variables
+# Set up input variables to f(x) = (a*x + b) % m called recursively n times
 a = B_inverse
 b = -A * B_inverse
 m = deck_len
