@@ -91,22 +91,13 @@ def evaluate_expression(expression, deck_len, start_pos):
 
 
 def simplify_expression(expression):
+
     if type(expression) is not tuple:
         return expression
 
-    op = expression[1]
     l = expression[0]
+    op = expression[1]
     r = expression[2]
-
-    if type(l) is int and type(r) is int:
-        if op == "+":
-            return l + r
-        elif op == "-":
-            return l - r
-        elif op == "*":
-            return l * r
-        else:
-            return l, op, r
 
     if type(l) is tuple:
         l = simplify_expression(l)
@@ -114,40 +105,23 @@ def simplify_expression(expression):
     if type(r) is tuple:
         r = simplify_expression(r)
 
-    if type(l) is int and type(r) is tuple:
+    if type(l) is int and type(r) is tuple and type(r[0] is int):
+        # Simplify (a op1 (b op2 E)) where a, b are integers
         r_op = r[1]
         if op == "*" and r_op == "*":
-            if type(r[0]) is int:
-                # a * (b * E) = (a * b) * E
-                return simplify_expression((l * r[0], '*', r[2]))
-            elif type(r[2]) is int:
-                # a * (E * c) = (a * c) * E
-                return simplify_expression((l * r[2], '*', r[0]))
+            # a * (b * E) => (a * b) * E
+            return simplify_expression((l * r[0], '*', r[2]))
         elif op == "*" and r_op in "-+":
-            if type(r[0]) is int:
-                # a * (b [+-] E) = a*b [+-] a*E
-                return simplify_expression((l * r[0], r_op, (l, '*', r[2])))
-            elif type(r[2]) is int:
-                # a * (E [+-] c) = a*E [+-] a*c
-                return simplify_expression((l, '*', r[0], r_op, l * r[2]))
+            # a * (b [+-] E) => a*b [+-] a*E
+            return simplify_expression((l * r[0], r_op, (l, '*', r[2])))
         elif op in "+" and r_op in "+-":
-            if type(r[0]) is int:
-                # a + (b [+-] E) = (a+b) [+-] E
-                return simplify_expression((l + r[0], r_op, r[2]))
-            elif type(r[2]) is int:
-                # a + (E [+-] b) = (a[+-]b) + E
-                new_l = simplify_expression((l, r_op, r[2]))  # returns an int
-                return simplify_expression(new_l, "+", r[0])
+            # a + (b [+-] E) => (a+b) [+-] E
+            return simplify_expression((l + r[0], r_op, r[2]))
         elif op == "-" and r_op in "+-":
-            if type(r[0]) is int:
-                # a - (b [+-] E) = (a-b) [-+] E
-                return simplify_expression((l - r[0], invert_plus_minus(r_op), r[2]))
-            elif type(r[2]) is int:
-                # a - (E [+-] b) = (a[-+]b) - E
-                new_l = simplify_expression((l, invert_plus_minus(r_op), r[2]))  # returns an int
-                return simplify_expression(new_l, "-", r[0])
+            # a - (b [+-] E) => (a-b) [-+] E
+            return simplify_expression((l - r[0], invert_plus_minus(r_op), r[2]))
 
-    # No other simplifications possible
+    # No other simplifications required
     return l, op, r
 
 
