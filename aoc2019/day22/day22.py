@@ -95,15 +95,9 @@ def simplify_expression(expression):
     if type(expression) is not tuple:
         return expression
 
-    l = expression[0]
+    l = simplify_expression(expression[0])
     op = expression[1]
-    r = expression[2]
-
-    if type(l) is tuple:
-        l = simplify_expression(l)
-
-    if type(r) is tuple:
-        r = simplify_expression(r)
+    r = simplify_expression(expression[2])
 
     if type(l) is int and type(r) is tuple and type(r[0] is int):
         # Simplify (a op1 (b op2 E)) where a, b are integers
