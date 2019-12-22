@@ -156,6 +156,9 @@ def expression_str(expression):
 
 
 def shuffle(deck):
+    """Follows instructions to shuffle the deck, and returns the shuffled deck. It also returns an algebraic expression
+    to be used in part 2 that calculates the output position of the shuffle for any given input position. The expression
+    must be evaluated modulo the deck size."""
     with open("input.txt") as f:
         lines = f.readlines()
     expression = "c"
