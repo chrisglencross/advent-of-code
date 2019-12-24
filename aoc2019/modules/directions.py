@@ -36,12 +36,20 @@ COMPASS_DIRECTIONS["S"] = Direction(name="S", delta=(0, 1), left_name="E", right
 COMPASS_DIRECTIONS["W"] = Direction(name="W", delta=(-1, 0), left_name="S", right_name="N",
                                     directions=COMPASS_DIRECTIONS)
 
-COMPASS_DIRECTIONS_8 = dict(COMPASS_DIRECTIONS)
-COMPASS_DIRECTIONS_8["NE"] = Direction(name="NE", delta=(1, -1), left_name="W", right_name="E",
-                                       directions=COMPASS_DIRECTIONS)
-COMPASS_DIRECTIONS_8["SE"] = Direction(name="SE", delta=(1, 1), left_name="N", right_name="S",
-                                       directions=COMPASS_DIRECTIONS)
-COMPASS_DIRECTIONS_8["SW"] = Direction(name="SW", delta=(-1, 1), left_name="E", right_name="W",
-                                       directions=COMPASS_DIRECTIONS)
-COMPASS_DIRECTIONS_8["NW"] = Direction(name="NW", delta=(-1, -1), left_name="S", right_name="N",
-                                       directions=COMPASS_DIRECTIONS)
+COMPASS_DIRECTIONS_8 = {}
+COMPASS_DIRECTIONS_8["N"] = Direction(name="N", delta=(0, -1), left_name="NW", right_name="NE",
+                                      directions=COMPASS_DIRECTIONS_8)
+COMPASS_DIRECTIONS_8["E"] = Direction(name="E", delta=(1, 0), left_name="NE", right_name="SE",
+                                      directions=COMPASS_DIRECTIONS_8)
+COMPASS_DIRECTIONS_8["S"] = Direction(name="S", delta=(0, 1), left_name="SE", right_name="SW",
+                                      directions=COMPASS_DIRECTIONS_8)
+COMPASS_DIRECTIONS_8["W"] = Direction(name="W", delta=(-1, 0), left_name="SW", right_name="NW",
+                                      directions=COMPASS_DIRECTIONS_8)
+COMPASS_DIRECTIONS_8["NE"] = Direction(name="NE", delta=(1, -1), left_name="N", right_name="E",
+                                       directions=COMPASS_DIRECTIONS_8)
+COMPASS_DIRECTIONS_8["SE"] = Direction(name="SE", delta=(1, 1), left_name="E", right_name="S",
+                                       directions=COMPASS_DIRECTIONS_8)
+COMPASS_DIRECTIONS_8["SW"] = Direction(name="SW", delta=(-1, 1), left_name="S", right_name="W",
+                                       directions=COMPASS_DIRECTIONS_8)
+COMPASS_DIRECTIONS_8["NW"] = Direction(name="NW", delta=(-1, -1), left_name="W", right_name="N",
+                                       directions=COMPASS_DIRECTIONS_8)
