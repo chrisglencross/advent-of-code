@@ -29,6 +29,10 @@ class Grid:
     def get_bounds(self) -> Tuple[Coords, Coords]:
         xs = set([c[0] for c in self.grid.keys()])
         ys = set([c[1] for c in self.grid.keys()])
+        if not xs:
+            xs = {0}
+        if not ys:
+            ys = {0}
         return (min(xs), min(ys)), (max(xs), max(ys))
 
     def find_cell(self, symbol) -> Coords:

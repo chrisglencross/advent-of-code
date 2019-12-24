@@ -8,11 +8,10 @@ class TextGridPrinter:
     default_value: str = " "
 
     def print(self, grid):
-        xs = set([c[0] for c in grid.keys()])
-        ys = set([c[1] for c in grid.keys()])
-        for y in range(min(ys), max(ys) + 1):
+        (min_x, min_y), (max_x, max_y) = grid.get_bounds()
+        for y in range(min_x, max_y + 1):
             row = []
-            for x in range(min(xs), max(xs) + 1):
+            for x in range(min_x, max_y + 1):
                 value = grid.get((x, y), self.default_value)
                 symbol = self.symbol_map.get(value, str(value))
                 if len(symbol) == 0:

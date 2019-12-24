@@ -39,7 +39,7 @@ biodiveristies = set()
 while True:
     b = get_biodiversity(grid)
     if b in biodiveristies:
-        print(b)
+        print("Part 1:", b)
         break
     biodiveristies.add(b)
     grid = tick(grid)

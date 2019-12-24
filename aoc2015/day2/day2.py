@@ -23,10 +23,7 @@ paper_total = 0
 ribbon_total = 0
 for line in lines:
     line = line.strip()
-    fields = line.split("x")
-    l = int(fields[0])
-    w = int(fields[1])
-    h = int(fields[2])
+    l, w, h = [int(field) for field in line.split("x")]
     paper_total += get_paper_area(l, w, h)
     ribbon_total += get_ribbon_length(l, w, h)
 print(paper_total)

@@ -88,6 +88,8 @@ for i in range(0, iterations):
 
 for i in range(0, grid_levels):
     print(f"Depth {i + min_grid_level}:")
+    grids[i][2, 2] = "?"
     grids[i].print()
+    print()
 
-print(count_all_grid_cells(grids))
+print("Part 2:", count_all_grid_cells(grids))
