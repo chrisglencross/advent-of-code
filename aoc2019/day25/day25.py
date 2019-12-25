@@ -45,6 +45,7 @@ def play(program):
     while not program.is_terminated():
         command = input("> ")
         run_command(program, command)
+    print("Game Over")
 
 
 def follow(program, route):
