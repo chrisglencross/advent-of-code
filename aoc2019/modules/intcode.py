@@ -132,7 +132,7 @@ class Program:
         return self.terminated
 
     def is_blocked(self):
-        return self.memory_get(self.pc) == 3 and len(self.input) == 0
+        return (self.memory_get(self.pc) % 100) == 3 and len(self.input) == 0
 
     def next_output(self):
         while not self.output and not self.is_terminated() and not self.is_blocked():
