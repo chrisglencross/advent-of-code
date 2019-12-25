@@ -49,6 +49,7 @@ def play(program):
 
 
 def follow(program, route):
+    route = list(route)
     message = get_output(program)
 
     while not program.is_terminated():
@@ -114,6 +115,10 @@ def security_checkpoint(program: intcode.Program):
 
 
 program = intcode.load_file("input.txt")
-follow(program, list(route))
+
+# Automate collecting items and getting through the security checkpoint
+follow(program, route)
 security_checkpoint(program)
+
+# Play any remaining steps manually
 play(program)
