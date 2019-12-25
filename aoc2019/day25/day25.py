@@ -12,13 +12,11 @@ def collect(item):
     return not any([item.find(n) >= 0 for n in do_not_collect])
 
 
-def print_output(program):
-    while True:
-        message = program.next_ascii_output()
-        if message:
-            print(message)
-        else:
-            break
+def get_output(program, silent=False):
+    message = program.next_ascii_output()
+    if message and not silent:
+        print(message)
+    return message
 
 
 def read_list(message, header):
@@ -35,52 +33,36 @@ def read_list(message, header):
 
 
 def run_command(program, command, silent=False):
-    print_output(program)
     if not silent:
-        print(">>" + command)
+        print(">> " + command)
     program.append_ascii_input(command)
-    message = program.next_ascii_output()
-    if message and not silent:
-        print(message)
+    message = get_output(program, silent)
     return message
 
 
 def play(program):
-    print_output(program)
+    get_output(program)
     while not program.is_terminated():
-        command = input(">")
-        program.append_ascii_input(command)
-        print_output(program)
+        command = input("> ")
+        run_command(program, command)
 
 
 def follow(program, route):
+    message = get_output(program)
+
     while not program.is_terminated():
 
-        message = program.next_ascii_output()
-        print(message)
-
-        command = None
+        # Take any item in the room
         items = read_list(message, "Items here:")
         for item in items:
             if collect(item):
-                command = "take " + item
+                run_command(program, "take " + item)
 
-        if command is None and route:
-            dir = route.pop(0)
-            if dir == "n":
-                command = "north"
-            elif dir == "e":
-                command = "east"
-            elif dir == "w":
-                command = "west"
-            elif dir == "s":
-                command = "south"
+        if not route:
+            break
 
-        if command is None:
-            return
-
-        print(f">> {command}")
-        program.append_ascii_input(command)
+        command = {"n": "north", "e": "east", "s": "south", "w": "west"}[route.pop(0)]
+        message = run_command(program, command)
 
 
 def try_combination(program, items):
@@ -103,23 +85,23 @@ def try_combination(program, items):
     return state
 
 
-def try_security(program, all_items):
+def find_security_combination(program, all_items):
     too_heavy_sets = set()
     for i in range(1, len(all_items)):
         for c in itertools.combinations(all_items, i):
             if any([set(c).issuperset(s) for s in too_heavy_sets]):
-                print(f"{c} is known to be too heavy")
+                print(f"Combination {c} is known to be too heavy")
                 continue
             state = try_combination(program, c)
             print(state, c)
             if state == "success":
                 return c
-            if state == "too_heavy":
+            elif state == "too_heavy":
                 too_heavy_sets.add(c)
 
 
 def security_checkpoint(program: intcode.Program):
-    print_output(program)
+    get_output(program)
 
     # Drop all
     message = run_command(program, "inv")
@@ -127,7 +109,7 @@ def security_checkpoint(program: intcode.Program):
     for item in all_items:
         run_command(program, "drop " + item)
 
-    try_security(program, all_items)
+    find_security_combination(program, all_items)
 
 
 program = intcode.load_file("input.txt")
