@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-# Advent of code aoc2015 day 1
-# See https://adventofcode.com/aoc2015/day/1
+# Advent of code 2015 day 1
+# See https://adventofcode.com/2015/day/1
 
 with open("input.txt") as f:
     lines = f.readlines()

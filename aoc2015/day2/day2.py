@@ -1,6 +1,6 @@
 #!/usr/bin/python3
-# Advent of code aoc2015 day 2
-# See https://adventofcode.com/aoc2015/day/2
+# Advent of code 2015 day 2
+# See https://adventofcode.com/2015/day/2
 
 def get_paper_area(l, w, h):
     lw = l * w
