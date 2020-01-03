@@ -9,7 +9,7 @@ def get_total(data):
     if type(data) is int:
         return data
     elif type(data) is dict:
-        if "red" in data.values():
+        if "red" in data.values():  # Part 2 only
             return 0
         return get_total(list(data.values()))
     elif type(data) is list:
