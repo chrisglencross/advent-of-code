@@ -23,29 +23,26 @@ ingredients = [
 ]
 
 
-def get_mix(i):
-    i1 = i // (101 * 101)
-    i2 = i // 101 % 101
-    i3 = i % 101
-    if i1 + i2 + i3 > 100:
-        return None
+def get_mixes(ingredient_count, total_amount):
+    if ingredient_count == 1:
+        yield [total_amount]
     else:
-        return (i1, i2, i3, 100 - (i1 + i2 + i3))
+        for amount in range(0, total_amount + 1):
+            prefix = [amount]
+            for suffix in get_mixes(ingredient_count - 1, total_amount - amount):
+                yield prefix + suffix
 
 
-best_recipe = None
 best_score = 0
-for i in range(101 * 101 * 101):
-    if (mix := get_mix(i)) is not None:
-        recipe = Ingredient(name=f"{mix}", capacity=0, durability=0, flavor=0, texture=0, calories=0)
-        for qty, ingredient in zip(mix, ingredients):
-            recipe.capacity += qty * ingredient.capacity
-            recipe.durability += qty * ingredient.durability
-            recipe.flavor += qty * ingredient.flavor
-            recipe.texture += qty * ingredient.texture
-            recipe.calories += qty * ingredient.calories
-        score = max(0, recipe.capacity) * max(0, recipe.durability) * max(0, recipe.flavor) * max(0, recipe.texture)
-        if score > best_score and recipe.calories == 500:
-            best_score = score
-            best_recipe = recipe
+for mix in get_mixes(4, 100):
+    recipe = Ingredient(name=f"{mix}", capacity=0, durability=0, flavor=0, texture=0, calories=0)
+    for qty, ingredient in zip(mix, ingredients):
+        recipe.capacity += qty * ingredient.capacity
+        recipe.durability += qty * ingredient.durability
+        recipe.flavor += qty * ingredient.flavor
+        recipe.texture += qty * ingredient.texture
+        recipe.calories += qty * ingredient.calories
+    score = max(0, recipe.capacity) * max(0, recipe.durability) * max(0, recipe.flavor) * max(0, recipe.texture)
+    if score > best_score and recipe.calories == 500:
+        best_score = score
 print(best_score)
