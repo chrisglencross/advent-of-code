@@ -298,8 +298,10 @@ class Program:
                               (addr in self.read_data_addr or addr in self.write_data_addr)):
                 is_relative_base = addr in self.relative_base_addr
                 comment_str = ""
-                if is_relative_base:
-                    comment_str = "\t# RELATIVE BASE"
+                if opcode >= 32 and opcode <= 127:
+                    comment_str = "\t" + chr(opcode)
+                # if is_relative_base:
+                #    comment_str = "\t# RELATIVE BASE"
                 print(f"@{addr:04}\t{opcode}{comment_str}")
                 addr = addr + 1
             else:
