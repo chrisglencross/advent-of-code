@@ -4,8 +4,17 @@
 
 
 def get_cell_number(row, col):
-    # Get the triangular number at the top right corner of the triangle containing this cell,
-    # then subtract (row number - 1). Note: nth triangular number is n*(n+1)/2
+    # Get the triangular number at the top right corner (row 1) of the diagonal containing this cell,
+    # then subtract (row number - 1) to move towards the bottom left. Note: nth triangular number is n*(n+1)/2
+    # e.g. row=4 col=3 has 21 at the top right of its diagonal (row=1 col=6). This diagonal has 18 at row 4.
+    #    | 1   2   3   4   5   6
+    # ---+---+---+---+---+---+---+
+    #  1 |  1   3   6  10  15 (21)
+    #  2 |  2   5   9  14  20
+    #  3 |  4   8  13  19
+    #  4 |  7  12 [18]
+    #  5 | 11  17
+    #  6 | 16
     triangle_size = row + col - 1
     return triangle_size * (triangle_size + 1) // 2 - (row - 1)
 
