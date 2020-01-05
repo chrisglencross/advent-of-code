@@ -4,20 +4,7 @@
 from itertools import count
 
 
-def calc_next(value):
-    return (value * 252533) % 33554393
-
-
-def calc_nth_value(n):
-    # Almost certainly a better way to calculate this with powers of modular arithmetic
-    # ...but this only takes a couple of seconds
-    value = 20151125
-    for i in range(0, n - 1):
-        value = calc_next(value)
-    return value
-
-
-def get_n(row, col):
+def get_cell_number(row, col):
     # Almost certainly a better way to calculate this with some arithmetic and properties of triangular numbers
     # ...but this only takes a couple of seconds.
     x = 1
@@ -33,7 +20,19 @@ def get_n(row, col):
             x += 1
 
 
-n = get_n(2947, 3029)
-print(n)
-value = calc_nth_value(n)
+def calc_next(value):
+    return (value * 252533) % 33554393
+
+
+def calc_nth_value(n):
+    # Almost certainly a better way to calculate this with powers of modular arithmetic
+    # ...but this only takes a couple of seconds
+    value = 20151125
+    for i in range(0, n - 1):
+        value = calc_next(value)
+    return value
+
+
+cell_number = get_cell_number(2947, 3029)
+value = calc_nth_value(cell_number)
 print(value)
