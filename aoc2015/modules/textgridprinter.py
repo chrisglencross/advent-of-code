@@ -9,9 +9,9 @@ class TextGridPrinter:
 
     def print(self, grid):
         (min_x, min_y), (max_x, max_y) = grid.get_bounds()
-        for y in range(min_x, max_y + 1):
+        for y in range(min_y, max_y + 1):
             row = []
-            for x in range(min_x, max_y + 1):
+            for x in range(min_x, max_x + 1):
                 value = grid.get((x, y), self.default_value)
                 symbol = self.symbol_map.get(value, str(value))
                 if len(symbol) == 0:
