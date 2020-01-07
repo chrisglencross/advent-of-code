@@ -2,15 +2,10 @@
 # Advent of code 2016 day 1
 # See https://adventofcode.com/2016/day/1
 
-DIRECTIONS = {
-    "north": ((0, -1), {"L": "west", "R": "east"}),
-    "south": ((0, 1), {"L": "east", "R": "west"}),
-    "east": ((1, 0), {"L": "north", "R": "south"}),
-    "west": ((-1, 0), {"L": "south", "R": "north"})
-}
+from aoc2016.modules import directions
 
 location = (0, 0)
-direction = "north"
+direction = directions.COMPASS_DIRECTIONS["N"]
 visited_locations = set()
 visited_locations.add(location)
 hq = None
@@ -20,10 +15,12 @@ with open("input.txt") as f:
 for step in lines[0].split(", "):
     turn = step[0]
     move = int(step[1:])
-    direction = DIRECTIONS[direction][1][turn]
-    delta = DIRECTIONS[direction][0]
+    if turn == "L":
+        direction = direction.turn_left()
+    elif turn == "R":
+        direction = direction.turn_right()
     for i in range(move):
-        location = (location[0] + delta[0], location[1] + delta[1])
+        location = direction.move(location)
         if hq is None and location in visited_locations:
             hq = location
         visited_locations.add(location)
