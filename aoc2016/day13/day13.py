@@ -12,13 +12,14 @@ def get_cell(x, y):
     return "." if bits % 2 == 0 else "#"
 
 
-cells = {}
-for x in range(0, 100):
-    for y in range(0, 100):
-        cells[(x, y)] = get_cell(x, y)
-grid = g.Grid(cells)
+def load_graph():
+    cells = {}
+    for x in range(0, 100):
+        for y in range(0, 100):
+            cells[(x, y)] = get_cell(x, y)
+    return g.Grid(cells).build_graph()
 
-graph = grid.build_graph()
-lengths = nx.shortest_path_length(graph, (1, 1))
-print("Part 1:", lengths[(31, 39)])
-print("Part 2:", len([(loc, length) for loc, length in lengths.items() if length <= 50]))
+
+distances = nx.shortest_path_length(load_graph(), (1, 1))
+print("Part 1:", distances[(31, 39)])
+print("Part 2:", len([distance for distance in distances.values() if distance <= 50]))
