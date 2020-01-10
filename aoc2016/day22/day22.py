@@ -82,10 +82,12 @@ initial_state.print_compact()
 
 state = initial_state
 while state.data_addr != (0, 0):
+
     left = (state.free_addr[0] - 1, state.free_addr[1])
     right = (state.free_addr[0] + 1, state.free_addr[1])
     up = (state.free_addr[0], state.free_addr[1] - 1)
     down = (state.free_addr[0], state.free_addr[1] + 1)
+
     if state.free_addr[1] == state.data_addr[1]:
         # Free space is on the same row as the data
         if state.free_addr[0] < state.data_addr[0]:
@@ -94,23 +96,26 @@ while state.data_addr != (0, 0):
         else:
             # Space is right of the data: move it down so we can move it to the left of the data and back up
             next_state = state.next_state(down, state.free_addr)
+
     elif state.free_addr[1] > state.data_addr[1]:
         # Free space is below the data
         if state.free_addr[0] < state.data_addr[0]:
-            # If space below and to the left of the data IF WE CAN
+            # Space is below and to the left of the data: move it up
             next_state = state.next_state(up, state.free_addr)
             if next_state is None:
-                # The blockage is above us - move left to avoid it
+                # The blockage is above the space: move the space left to navigate around it
                 next_state = state.next_state(left, state.free_addr)
         else:
             # Space is below and to the right of the data: move it left
             next_state = state.next_state(left, state.free_addr)
+
     else:
-        raise Exception("Unexpected state")
+        raise Exception("Unexpected state: free space is above data")
+
     if next_state is None:
-        print("We are stuck")
         state.print_compact()
-        break
+        raise Exception("Algorithm failure: unexpected blockage. Check the map.")
+
     state = next_state
 
 state.print_compact()
