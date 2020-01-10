@@ -58,7 +58,7 @@ class State:
                     symbol = "G"
                 if self.free_addr == (x, y):
                     symbol = "_"
-                if self.fs_used[(x, y)] > 400:
+                if self.fs_used[(x, y)] > 400:  # Big block that cannot be moved
                     symbol = "#"
                 line.append(f"{brackets[0]}{symbol}{brackets[1]}")
             print("".join(line))
