@@ -1,0 +1,49 @@
+# Intermediate code reverse engineered, before optimising into converted_input.py
+
+a = ?
+
+d = a    #cpy a d
+c = 7    #cpy 7 c
+b = 362  #cpy 362 b
+
+while c > 0:
+    while b > 0:
+        d += 1   #inc d
+        b -= 1   #dec b
+                 #jnz b -2
+    c -= 1  #dec c
+                 #jnz c -5
+
+while True:
+    a = d   #cpy d a
+
+    while True:
+        #noop   #jnz 0 0
+        b = a    # cpy a b
+        a = 0    # cpy 0 a
+        c = 2    # cpy 2 c
+
+        while c != 0:
+            if b == 0:  # jnz b 2
+                break   # jnz 1 6
+                b -= 1  # dec b
+                c -= 1  # dec c
+                        # jnz c -4
+            a += 1 # inc a
+                   # jnz 1 -7
+
+        b = 2  # cpy 2 b
+
+        while True:
+            if c == 0:  # jnz c 2
+                break   # jnz 1 4
+            b -= 1 # dec b
+            c -= 1 # dec c
+                    # jnz 1 -4
+        #noop   # jnz 0 0
+
+        print(b)    # out b
+        if a == 0: # jnz a -19
+            break
+
+    #  jnz 1 -21
