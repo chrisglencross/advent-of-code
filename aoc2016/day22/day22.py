@@ -77,6 +77,9 @@ initial_state.print_compact()
 # free space can move almost anywhere except a large horizontal row of immovable blocks, which the space must move left
 # to avoid (hence the rule to move left if the space cannot move up)
 
+# First of all attempted this with an exhaustive depth first and breadth-first searches, but too many states to search.
+# We quickly run out of memory.
+
 state = initial_state
 while state.data_addr != (0, 0):
     left = (state.free_addr[0] - 1, state.free_addr[1])
