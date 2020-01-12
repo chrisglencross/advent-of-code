@@ -2,99 +2,21 @@
 # Advent of code 2016 day 23
 # See https://adventofcode.com/2016/day/23
 
-import re
-
-with open("input.txt") as f:
-    lines = [line.strip() for line in f.readlines()]
-
-program = []
-for line in lines:
-    if match := re.fullmatch(r"cpy (-?\d+) ([a-d])", line):
-        value = int(match.group(1))
-        target = match.group(2)
-        program.append(("cpy", value, target))
-    elif match := re.fullmatch(r"cpy ([a-d]) ([a-d])", line):
-        source = match.group(1)
-        target = match.group(2)
-        program.append(("cpy", source, target))
-    elif match := re.fullmatch(r"inc ([a-d])", line):
-        program.append(("inc", match.group(1)))
-    elif match := re.fullmatch(r"dec ([a-d])", line):
-        program.append(("dec", match.group(1)))
-    elif match := re.fullmatch(r"jnz (-?\d+) (-?\d+)", line):
-        value = int(match.group(1))
-        addr = int(match.group(2))
-        program.append(("jnz", value, addr))
-    elif match := re.fullmatch(r"jnz ([a-d]) (-?\d+)", line):
-        reg = match.group(1)
-        addr = int(match.group(2))
-        program.append(("jnz", reg, addr))
-    elif match := re.fullmatch(r"jnz ([-?\d]+) ([a-d]+)", line):
-        reg = int(match.group(1))
-        addr = match.group(2)
-        program.append(("jnz", reg, addr))
-    elif match := re.fullmatch(r"tgl (-?\d+)", line):
-        addr = int(match.group(1))
-        program.append(("tgl", addr))
-    elif match := re.fullmatch(r"tgl ([a-z]+)", line):
-        addr = match.group(1)
-        program.append(("tgl", addr))
-    elif match := re.fullmatch(r"out ([a-z]+)", line):
-        addr = match.group(1)
-        program.append(("out", addr))
-    else:
-        raise Exception(f"Unknown command '{line}'")
+from aoc2016.modules import assembunny
 
 
-def arg_value(registers, value):
-    if type(value) is int:
-        return value
-    else:
-        return registers[value]
+# I actually did this by reverse engineering the program to work out what it was doing
+# (see annotated_input.tx and converted_input.txt) but here's the easier way...
+
+def get_first_outputs(program):
+    outputs = []
+    while len(outputs) < 20:
+        outputs.append(program.next_output())
+    return outputs
 
 
-registers = {"a": 196, "b": 0, "c": 0, "d": 0}
-
-pc = 0
-while 0 <= pc < len(program):
-    # print(f"{pc}: {program[pc]}")
-    op, *args = program[pc]
-    if op == "cpy":
-        if type(args[1]) != int:
-            registers[args[1]] = arg_value(registers, args[0])
-        pc += 1
-    elif op == "inc":
-        registers[args[0]] += 1
-        pc += 1
-    elif op == "dec":
-        registers[args[0]] -= 1
-        pc += 1
-    elif op == "jnz":
-        if arg_value(registers, args[0]) != 0:
-            pc += arg_value(registers, args[1])
-        else:
-            pc += 1
-    elif op == "tgl":
-        addr = pc + arg_value(registers, args[0])
-        if 0 <= addr < len(program):
-            other_op, *other_args = program[addr]
-
-            if other_op == "inc":
-                replace_op = "dec"
-            elif len(other_args) == 1:
-                replace_op = "inc"
-            elif other_op == "jnz":
-                replace_op = "cpy"
-            elif len(other_args) == 2:
-                replace_op = "jnz"
-            # print(f"  => TOGGLING {addr}: op={other_op} {other_args} with {replace_op}")
-            program[addr] = tuple([replace_op, *other_args])
-        pc += 1
-    elif op == "out":
-        print(arg_value(registers, args[0]))
-        pc += 1
-    else:
-        raise Exception(f"Unknown op {op}")
-    # print(f"  => pc={pc} reg={registers}")
-
-print(registers)
+for a in range(0, 1000):
+    program = assembunny.load_program("input.txt", registers={"a": a})
+    if [0, 1] * 10 == get_first_outputs(program):
+        print("Answer:", a)
+        break
