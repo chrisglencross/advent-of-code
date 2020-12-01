@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Optional
 
 import networkx as nx
 
@@ -35,7 +35,7 @@ class Grid:
             ys = {0}
         return (min(xs), min(ys)), (max(xs), max(ys))
 
-    def find_cell(self, symbol) -> Coords:
+    def find_cell(self, symbol) -> Optional[Coords]:
         for coords, cell in self.grid.items():
             if cell == symbol:
                 return coords
