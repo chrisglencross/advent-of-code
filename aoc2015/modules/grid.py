@@ -129,7 +129,6 @@ def parse_grid(content: str) -> Grid:
 
 
 def load_grid(file: str) -> Grid:
-    grid = {}
     with open(file) as f:
         content = f.read()
     return parse_grid(content)
