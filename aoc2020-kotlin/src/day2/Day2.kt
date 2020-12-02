@@ -19,10 +19,9 @@ fun countValid(lines: List<String>, isValid: (Int, Int, Char, String) -> Boolean
             .map {regex.matchEntire(it.trim())}
             .filter {it != null}
             .map {it!!}
-            .filter { mr: MatchResult ->
+            .count { mr: MatchResult ->
                 isValid(mr.groupValues[1].toInt(), mr.groupValues[2].toInt(), mr.groupValues[3][0], mr.groupValues[4])
             }
-            .count()
 }
 
 fun main() {
