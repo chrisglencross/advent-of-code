@@ -4,23 +4,19 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 fun isValid1(n1: Int, n2: Int, char: Char, password: String): Boolean {
-    val count = password.groupBy { it }.getOrDefault(char, emptyList()).size
-    return count in n1..n2
+    return (password.count { it == char }) in n1..n2
 }
 
 fun isValid2(n1: Int, n2: Int, char: Char, password: String): Boolean {
-    return (password[n1-1] == char) != (password[n2-1] == char)
+    return (password[n1 - 1] == char) xor (password[n2 - 1] == char)
 }
 
 fun countValid(lines: List<String>, isValid: (Int, Int, Char, String) -> Boolean): Int {
-    val regex = """^([0-9]+)-([0-9]+) (.): (.*)$""".toRegex()
+    val regex = """^(\d+)-(\d+) (.): (.*)$""".toRegex()
     return lines
-            .asSequence()
-            .map {regex.matchEntire(it.trim())}
-            .filter {it != null}
-            .map {it!!}
-            .count { mr: MatchResult ->
-                isValid(mr.groupValues[1].toInt(), mr.groupValues[2].toInt(), mr.groupValues[3][0], mr.groupValues[4])
+            .mapNotNull { regex.matchEntire(it.trim()) }
+            .count {
+                isValid(it.groupValues[1].toInt(), it.groupValues[2].toInt(), it.groupValues[3][0], it.groupValues[4])
             }
 }
 
