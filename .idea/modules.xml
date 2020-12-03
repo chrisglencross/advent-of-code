@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/advent-of-code.iml" filepath="$PROJECT_DIR$/advent-of-code.iml" />
+      <module fileurl="file://$PROJECT_DIR$/aoc2020-kotlin/aoc2020-kotlin.iml" filepath="$PROJECT_DIR$/aoc2020-kotlin/aoc2020-kotlin.iml" />
     </modules>
   </component>
 </project>
