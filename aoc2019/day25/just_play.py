@@ -18,7 +18,7 @@ def play(program):
         else:
             program.append_ascii_input(command)
             print_output(program)
-    print("Gnoame Over")
+    print("Game Over")
 
 
 program = intcode.load_file("input.txt", debug=True)
