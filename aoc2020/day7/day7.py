@@ -13,29 +13,25 @@ def load_rules():
     for line in lines:
         match = re.fullmatch(r"(.*) bags contain (.+)\.", line.strip())
         outer = match.group(1)
-        inners = []
-        if match.group(2) != "no other bags":
-            for s in match.group(2).split(", "):
-                contained_match = re.search(r"^(\d+) (.*) bags?$", s)
-                inners.append((contained_match.group(2), int(contained_match.group(1))))
-        result[outer] = inners
+        if match.group(2) == "no other bags":
+            result[outer] = []
+        else:
+            result[outer] = [
+                (m.group(2), int(m.group(1)))
+                for m in [re.fullmatch(r"(\d+) (.*) bags?", s) for s in match.group(2).split(", ")]
+            ]
     return result
 
 
 @lru_cache
 def can_contain(outer, target):
-    inners = {pair[0] for pair in rules.get(outer)}
-    if target in inners:
-        return True
-    for inner in inners:
-        if can_contain(inner, target):
-            return True
-    return False
+    inner_colours = {pair[0] for pair in rules.get(outer)}
+    return target in inner_colours or any([can_contain(inner, target) for inner in inner_colours])
 
 
 @lru_cache
 def count_bags(outer):
-    return 1+sum([count_bags(pair[0]) * pair[1] for pair in rules.get(outer)])
+    return 1+sum([count_bags(inner) * qty for inner, qty in rules.get(outer)])
 
 
 rules = load_rules()
