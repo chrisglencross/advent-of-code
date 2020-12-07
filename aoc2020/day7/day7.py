@@ -3,7 +3,7 @@
 # See https://adventofcode.com/2020/day/7
 
 import re
-from functools import lru_cache
+from functools import cache
 
 
 def load_rules():
@@ -23,13 +23,13 @@ def load_rules():
     return result
 
 
-@lru_cache
+@cache
 def can_contain(outer, target):
     inner_colours = {pair[0] for pair in rules.get(outer)}
     return target in inner_colours or any([can_contain(inner, target) for inner in inner_colours])
 
 
-@lru_cache
+@cache
 def count_bags(outer):
     return 1+sum([count_bags(inner) * qty for inner, qty in rules.get(outer)])
 
