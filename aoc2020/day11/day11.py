@@ -8,7 +8,7 @@ from aoc2020.modules import directions, imagegridprinter, textgridprinter, grid 
 
 
 def run(name, tick_function):
-    printer = imagegridprinter.ImageGridPrinter(max_width=800, max_height=800, duration=200, filename=f"{name}.gif",
+    printer = imagegridprinter.ImageGridPrinter(max_width=388, max_height=368, duration=200, filename=f"{name}.gif",
                                                 colour_map={"L": (64, 255, 64), "#": (255, 64, 64), ".": (0, 0, 0)})
     # printer = textgridprinter.TextGridPrinter()
     grid = g.load_grid("input.txt")
