@@ -4,12 +4,11 @@
 
 preamble = 25
 with open("input.txt") as f:
-    lines = f.readlines()
-values = [int(line) for line in lines]
+    values = [int(line) for line in f.readlines()]
 
 for i in range(preamble, len(values)):
     v = values[i]
-    previous = values[i-preamble: i]
+    previous = values[i-preamble:i]
     if len([p for p in previous if (v - p) in previous]) < 2:
         print(f"{i}: {v} not in {previous}")
         break
