@@ -12,14 +12,20 @@ class Direction:
     delta: Tuple[int, int] = field(default_factory=None)
     directions: Dict[str, object] = field(default_factory=None)
 
-    def move(self, from_location):
-        return from_location[0] + self.delta[0], from_location[1] + self.delta[1]
+    def move(self, from_location, step=1):
+        return from_location[0] + self.delta[0]*step, from_location[1] + self.delta[1]*step
 
-    def turn_left(self):
-        return self.directions[self.left_name]
+    def turn_left(self, turns=1):
+        result = self
+        for i in range(0, turns):
+            result = result.directions[result.left_name]
+        return result
 
-    def turn_right(self):
-        return self.directions[self.right_name]
+    def turn_right(self, turns=1):
+        result = self
+        for i in range(0, turns):
+            result = result.directions[result.right_name]
+        return result
 
     def reverse(self) -> Direction:
         return self.turn_right().turn_right()
