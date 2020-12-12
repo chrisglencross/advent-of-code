@@ -2,7 +2,6 @@
 # Advent of code 2020 day 12
 # See https://adventofcode.com/2020/day/12
 from functools import reduce
-
 from aoc2020.modules.directions import COMPASS_DIRECTIONS
 
 with open("input.txt") as f:
