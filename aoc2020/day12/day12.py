@@ -6,14 +6,13 @@ from functools import reduce
 from aoc2020.modules.directions import COMPASS_DIRECTIONS
 
 with open("input.txt") as f:
-    lines = f.readlines()
+    commands = [(line[0], int(line[1:]) )for line in f.readlines()]
 
 
 def part1():
     ship = (0, 0)
     direction = COMPASS_DIRECTIONS["E"]
-    for line in lines:
-        cmd, qty = line[0], int(line[1:])
+    for cmd, qty in commands:
         if cmd in COMPASS_DIRECTIONS:
             ship = COMPASS_DIRECTIONS[cmd].move(ship, qty)
         elif cmd == "F":
@@ -28,8 +27,7 @@ def part1():
 def part2():
     ship = (0, 0)
     waypoint = (10, -1)
-    for line in lines:
-        cmd, qty = line[0], int(line[1:])
+    for cmd, qty in commands:
         if cmd in COMPASS_DIRECTIONS:
             waypoint = COMPASS_DIRECTIONS[cmd].move(waypoint, qty)
         elif cmd == "F":
