@@ -17,20 +17,6 @@ def part1():
     print(n[0][0] * n[0][1])
 
 
-def gcd_extended(a, b):
-    if a == 0:
-        return b, 0, 1
-    gcd, x1, y1 = gcd_extended(b % a, a)
-    return gcd, y1 - (b // a) * x1, x1
-
-
-def mod_inverse(a, m):
-    g, x, y = gcd_extended(a, m)
-    if g != 1:
-        raise Exception(f"Inverse does not exist: {a}, {m}")
-    return (x % m + m) % m
-
-
 def reduce_busses(bus1, bus2):
     """Given two buss definitions (time of first departure, aka offset, and frequency) return a pair containing time
     when both simultaneously depart, and the frequency of when this happens.
@@ -42,8 +28,7 @@ def reduce_busses(bus1, bus2):
     offset1 = bus1[0] % f1
     offset2 = bus2[0] % f2
 
-    # THE MATHS BIT:
-    # Comment is bigger than the code:
+    # THE MATHS BIT (comment is bigger than the code):
 
     # Find t such that:
     # (t % f1) = offset1, and
@@ -64,8 +49,8 @@ def reduce_busses(bus1, bus2):
     # n1*f1 = offset2-offset1 (mod f2)
     # n1 = (offset2 -offset1) * f1_inverse (mod f2)
 
-    # Calculate f1_inverse
-    f1_inverse = mod_inverse(f1, f2)
+    # Calculate f1_inverse (Python 3.8+)
+    f1_inverse = pow(f1, -1, f2)
 
     # Solve:
     n1 = (f1_inverse * (offset2 - offset1)) % f2
