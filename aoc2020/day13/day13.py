@@ -47,20 +47,26 @@ def reduce_busses(bus1, bus2):
 
     # Using invariant n2*f2 = 0 (mod f2),
     # n1*f1 = offset2-offset1 (mod f2)
-    # n1 = (offset2 -offset1) * f1_inverse (mod f2)
+    # n1 = (offset2-offset1) * f1_inverse (mod f2)
 
     # Calculate f1_inverse (Python 3.8+)
     f1_inverse = pow(f1, -1, f2)
 
     # Solve:
-    n1 = (f1_inverse * (offset2 - offset1)) % f2
+    n1 = ((offset2 - offset1) * f1_inverse) % f2
     t = n1 * f1 + offset1
 
-    return t, numpy.lcm(f1, f2, dtype=numpy.object_)
+    # Both busses leave every f minutes after t
+    f = numpy.lcm(f1, f2, dtype=numpy.object_)
+
+    return t, f
 
 
 def part2():
-    times = [(int(t) - i, int(t)) for i, t in enumerate(busses) if t != 'x']
+    # Rather than having busses first depart simultaneously at t=0 and check when they arrive i minutes apart, we'll
+    # have the busses first depart at t=-i minutes and find a solution when they arrive simultaneously.
+    # Amounts to the same thing.
+    times = [(-i, int(t)) for i, t in enumerate(busses) if t != 'x']
     print(functools.reduce(reduce_busses, times)[0])
 
 
