@@ -8,16 +8,16 @@ with open("input.txt") as f:
     lines = f.readlines()
 
 arrive = int(lines[0])
-busses = lines[1].strip().split(",")
+buses = lines[1].strip().split(",")
 
 
 def part1():
-    times = [int(bus) for bus in busses if bus != "x"]
+    times = [int(bus) for bus in buses if bus != "x"]
     n = sorted([(m, m - (arrive % m)) for m in times], key=lambda p: p[1])
     print(n[0][0] * n[0][1])
 
 
-def reduce_busses(bus1, bus2):
+def reduce_buses(bus1, bus2):
     """Given two buss definitions (time of first departure, aka offset, and frequency) return a pair containing time
     when both simultaneously depart, and the frequency of when this happens.
 
@@ -56,18 +56,18 @@ def reduce_busses(bus1, bus2):
     n1 = ((offset2 - offset1) * f1_inverse) % f2
     t = n1 * f1 + offset1
 
-    # Both busses leave every f minutes after t
+    # Both buses leave every f minutes after t
     f = numpy.lcm(f1, f2, dtype=numpy.object_)
 
     return t, f
 
 
 def part2():
-    # Rather than having busses first depart simultaneously at t=0 and check when they arrive i minutes apart, we'll
-    # have the busses first depart at t=-i minutes and find a solution when they arrive simultaneously.
+    # Rather than having buses first depart simultaneously at t=0 and check when they arrive i minutes apart, we'll
+    # have the buses first depart at t=-i minutes and find a solution when they arrive simultaneously.
     # Amounts to the same thing.
-    times = [(-i, int(t)) for i, t in enumerate(busses) if t != 'x']
-    print(functools.reduce(reduce_busses, times)[0])
+    times = [(-i, int(t)) for i, t in enumerate(buses) if t != 'x']
+    print(functools.reduce(reduce_buses, times)[0])
 
 
 part1()
