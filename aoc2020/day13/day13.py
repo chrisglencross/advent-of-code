@@ -18,7 +18,7 @@ def part1():
 
 
 def reduce_buses(bus1, bus2):
-    """Given two buss definitions (time of first departure, aka offset, and frequency) return a pair containing time
+    """Given two bus definitions (time of first departure, aka offset, and frequency) return a pair containing time
     when both simultaneously depart, and the frequency of when this happens.
 
     The result can be treated as a synthetic bus in further reduce operations."""
