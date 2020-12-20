@@ -102,7 +102,7 @@ class Grid:
         return self.grid.get(coords, default_value)
 
     def __getitem__(self, coords: Coords):
-        return self.get(coords)
+        return self.grid[coords]
 
     def __setitem__(self, coords: Coords, cell: str):
         self.grid[coords] = cell
@@ -138,6 +138,24 @@ class Grid:
 
     def print(self):
         textgridprinter.TextGridPrinter().print(self)
+
+    def flip_x(self):
+        flipped = {}
+        for (x, y), c in self.items():
+            flipped[(-x, y)] = c
+        return Grid(flipped)
+
+    def flip_y(self):
+        flipped = {}
+        for (x, y), c in self.items():
+            flipped[(x, -y)] = c
+        return Grid(flipped)
+
+    def rotate_cw(self):
+        rotated = {}
+        for (x, y), c in self.items():
+            rotated[(-y, x)] = c
+        return Grid(rotated)
 
 
 def parse_grid(content: str) -> Grid:
