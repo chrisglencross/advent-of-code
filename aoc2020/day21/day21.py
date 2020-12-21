@@ -18,10 +18,7 @@ def load():
 
 
 def get_all_ingredients(file):
-    result = []
-    for ingredients, allergens in file:
-        result.extend(ingredients)
-    return result
+    return [ingredient for ingredients, allergens in file for ingredient in ingredients]
 
 
 def get_possible_allergen_ingredients(file):
