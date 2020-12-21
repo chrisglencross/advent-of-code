@@ -17,13 +17,13 @@ def load():
     return result
 
 
-def get_all_ingredients(file):
-    return [ingredient for ingredients, allergens in file for ingredient in ingredients]
+def get_all_ingredients(data):
+    return [ingredient for ingredients, allergens in data for ingredient in ingredients]
 
 
-def get_possible_allergen_ingredients(file):
+def get_possible_allergen_ingredients(data):
     result = {}
-    for ingredients, allergens in file:
+    for ingredients, allergens in data:
         for allergen in allergens:
             possible_ingredients = result.get(allergen)
             if possible_ingredients is None:
