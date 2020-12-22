@@ -53,8 +53,8 @@ def play_game(game_no, cards, recurse=False):
     return winner_player, cards[winner_player]
 
 
-def calc_score(winning_hand):
-    return sum([i * int(c) for i, c in enumerate(reversed(winning_hand), start=1)])
+def calc_score(hand):
+    return sum([i * int(c) for i, c in enumerate(reversed(hand), start=1)])
 
 
 _, winning_hand = play_game(1, load_cards(), False)
