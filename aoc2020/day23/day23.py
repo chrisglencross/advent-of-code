@@ -23,14 +23,12 @@ def do_move(current_cup, cup_index, max_cup_no):
 
 
 def play_game(cups, turns):
-    cup_count = len(cups)
 
     # Index of cup to next cup
+    cup_count = len(cups)
     cup_index = [None] * (cup_count+1)
-    for i in range(0, len(cups)):
-        c = cups[i]
-        n = cups[(i + 1) % cup_count]
-        cup_index[c] = n
+    for i, c in enumerate(cups):
+        cup_index[c] = cups[(i + 1) % cup_count]
 
     current_cup = cups[0]
     max_cup_no = max(cups)
@@ -41,25 +39,27 @@ def play_game(cups, turns):
     return cup_index
 
 
-puzzle = "952316487"
+def part1(puzzle):
+    cups = [int(c) for c in puzzle]
+    cup_index = play_game(cups, 100)
 
-# Part 1
-cups = [int(c) for c in puzzle]
-cup_index = play_game(cups, 100)
+    result = []
+    next1 = cup_index[1]
+    while next1 != 1:
+        result.append(str(next1))
+        next1 = cup_index[next1]
+    print("Part 1:", "".join(result))
 
-result = []
-cup = cup_index[1]
-while cup != 1:
-    result.append(str(cup))
-    cup = cup_index[cup]
-print("Part 1:", "".join(result))
 
-# Part 2
-cups = [int(c) for c in puzzle]
-for i in range(10, 1_000_000 + 1):
-    cups.append(i)
-cup_index = play_game(cups, 10_000_000)
+def part2(puzzle):
+    cups = [int(c) for c in puzzle]
+    cups.extend(range(10, 1_000_001))
+    cup_index = play_game(cups, 10_000_000)
 
-next1 = cup_index[1]
-next2 = cup_index[next1]
-print("Part 2:", next1 * next2)
+    next1 = cup_index[1]
+    next2 = cup_index[next1]
+    print("Part 2:", next1 * next2)
+
+
+part1("952316487")
+part2("952316487")
