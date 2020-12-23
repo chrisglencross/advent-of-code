@@ -27,20 +27,19 @@ def play_game(game_no, cards, recurse=False):
         # Player 0 wins if we've been here before
         round_state = tuple(tuple(player_cards) for player_cards in cards)
         if round_state in played_rounds:
-            logger.info(f"Player 1 wins: Repeated round_no")
+            logger.info(f"Player 1 wins: Repeated round")
             return 0, cards[0]
         played_rounds.add(round_state)
 
         played_cards = [(player, cards[player].pop(0)) for player in range(0, 2)]
         for player, player_card in played_cards:
-            logger.info(f"Player {player} plays: {player_card}")
+            logger.info(f"Player {player+1} plays: {player_card}")
 
         if recurse and all([len(cards[player]) >= played_card for player, played_card in played_cards]):
             logger.info(f"Playing a sub-game to determine the winner")
             sub_cards = [cards[player][0:played_card] for player, played_card in played_cards]
             winner_player, _ = play_game(game_no + 1, sub_cards, True)
             logger.info(f"...anyway, back to game {game_no}")
-            pass
         else:
             sorted_played_cards = sorted(played_cards, key=lambda p: p[1], reverse=True)
             winner_player = sorted_played_cards[0][0]
