@@ -26,7 +26,7 @@ def play_game(cups, turns):
     cup_count = len(cups)
 
     # Index of cup to next cup
-    cup_index = dict()
+    cup_index = [None] * (cup_count+1)
     for i in range(0, len(cups)):
         c = cups[i]
         n = cups[(i + 1) % cup_count]
