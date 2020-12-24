@@ -1,9 +1,8 @@
 with open("input") as f:
-    lines = f.readlines()
+    lines = [line.strip() for line in f.readlines()]
 
 found = set()
 for line in lines:
-    line = line.strip()
     for i in range(0, len(line)):
         chars = list(line)
         chars[i] = '*'
