@@ -325,6 +325,8 @@ Then brute force values of r7 to find the output 6. (r7 = 25734 for me)
 - east 2628
 - south 2558 (leave grid)
 
+See maze.py to solve route through the grid
+
 2603 Vault Lock +
 
 - north 2583
