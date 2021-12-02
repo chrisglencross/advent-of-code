@@ -9,17 +9,15 @@ with open("input.txt") as f:
 
 
 def follow_commands(lines, forward, depth):
-    p = d = aim = 0
+    p, d, aim = 0, 0, 0
     for line in lines:
-        match = re.search("^([a-z]+) ([0-9]+)$", line.strip())
-        command = match.group(1)
-        x = int(match.group(2))
-        if command == "forward":
-            p, d, aim = forward(p, d, aim, x)
-        elif command == "up":
-            p, d, aim = depth(p, d, aim, -x)
-        elif command == "down":
-            p, d, aim = depth(p, d, aim, x)
+        match re.search("^([a-z]+) ([0-9]+)$", line.strip()).groups():
+            case ["forward", x]:
+                p, d, aim = forward(p, d, aim, int(x))
+            case ["up", x]:
+                p, d, aim = depth(p, d, aim, -int(x))
+            case ["down", x]:
+                p, d, aim = depth(p, d, aim, int(x))
     print(p * d)
 
 
