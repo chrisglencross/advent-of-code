@@ -16,14 +16,14 @@ def bit_value(bit):
     return 2 ** (BIT_COUNT - bit - 1)
 
 
-def count_bits(values, bit):
+def count_set_bits(values, bit):
     return sum([1 for value in values if bit_value(bit) & value != 0])
 
 
 def max_bits(values, find_most_frequent):
-    bit_counts = [count_bits(values, i) for i in range(BIT_COUNT)]
+    set_bit_counts = [count_set_bits(values, i) for i in range(BIT_COUNT)]
     return sum([bit_value(i)
-                for i, c in enumerate(bit_counts)
+                for i, c in enumerate(set_bit_counts)
                 if (find_most_frequent and c >= len(values) // 2) or (not find_most_frequent and c < len(values) // 2)])
 
 
