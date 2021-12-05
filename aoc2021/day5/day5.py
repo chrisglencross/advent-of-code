@@ -16,8 +16,7 @@ def load_grid(lines, diagonals):
             steps = max(max(x0, x1) - min(x0, x1), max(y0, y1) - min(y0, y1)) + 1
             for i in range(steps):
                 x, y = x0 + i * dx, y0 + i * dy
-                v = grid.setdefault((x, y), 0)
-                grid[(x, y)] = v + 1
+                grid[(x, y)] = grid.setdefault((x, y), 0) + 1
     return grid
 
 
