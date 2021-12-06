@@ -7,17 +7,14 @@ with open("input.txt") as f:
     lines = f.readlines()
 
 counters = [int(v) for v in lines[0].split(",")]
-lanterns = [(c, len(list(i))) for c, i in itertools.groupby(sorted(counters))]
+lanterns = dict((c, len(list(i))) for c, i in itertools.groupby(sorted(counters)))
 
 print(f"Initial state: {lanterns}", lanterns)
-for day in range(0, 256):
-    breeders = sum(qty for timer, qty in lanterns if timer == 0)
-    lanterns = [(timer - 1 if timer > 0 else 6, qty) for timer, qty in lanterns]
-    lanterns.append((8, breeders))
+for day in range(256):
+    breeders = lanterns.get(0, 0)
+    lanterns = dict((timer - 1, qty) for timer, qty in lanterns.items() if timer != 0)
+    lanterns[6] = lanterns.get(6, 0) + breeders
+    lanterns[8] = breeders
 
-    # Coalesce
-    lanterns = [(timer, sum(entry[1] for entry in fish))
-                for timer, fish in itertools.groupby(sorted(lanterns), key=lambda pair: pair[0])]
-
-    total = sum([pair[1] for pair in lanterns])
+    total = sum(lanterns.values())
     print(f"After {day + 1} day: {lanterns} (Total={total})")
