@@ -21,24 +21,22 @@ print(len([1
 
 
 # Part 2
-def find_symbol(symbols, condition):
-    return [symbol for symbol in symbols if condition(symbol)][0]
+def find(values, condition):
+    return next(value for value in values if condition(value))
 
 
 answer = 0
 for input_symbols, output_symbols in entries.items():
-    s1 = find_symbol(input_symbols, lambda symbol: len(symbol) == 2)
-    s4 = find_symbol(input_symbols, lambda symbol: len(symbol) == 4)
-    s7 = find_symbol(input_symbols, lambda symbol: len(symbol) == 3)
-    s8 = find_symbol(input_symbols, lambda symbol: len(symbol) == 7)
-    s3 = find_symbol(input_symbols, lambda symbol: len(symbol) == 5 and len(s1 & symbol) == 2)
-    s5 = find_symbol(input_symbols, lambda symbol: len(symbol) == 5 and symbol != s3 and len(s4 & symbol) == 3)
-    s2 = find_symbol(input_symbols, lambda symbol: len(symbol) == 5 and len(s4 & symbol) == 2)
-    s9 = find_symbol(input_symbols, lambda symbol: len(symbol) == 6 and len(s3 & symbol) == 5)
-    s0 = find_symbol(input_symbols, lambda symbol: len(symbol) == 6 and symbol != s9 and len(s1 & symbol) == 2)
-    s6 = find_symbol(input_symbols, lambda symbol: len(symbol) == 6 and symbol != s9 and symbol != s0)
-    symbols = [(s0, 0), (s1, 1), (s2, 2), (s3, 3), (s4, 4), (s5, 5), (s6, 6), (s7, 7), (s8, 8), (s9, 9)]
-    answer += functools.reduce(
-        lambda x, s: 10 * x + [value for symbol, value in symbols if symbol == s][0],
-        output_symbols, 0)
+    s1 = find(input_symbols, lambda symbol: len(symbol) == 2)
+    s4 = find(input_symbols, lambda symbol: len(symbol) == 4)
+    s7 = find(input_symbols, lambda symbol: len(symbol) == 3)
+    s8 = find(input_symbols, lambda symbol: len(symbol) == 7)
+    s3 = find(input_symbols, lambda symbol: len(symbol) == 5 and len(s1 & symbol) == 2)
+    s5 = find(input_symbols, lambda symbol: len(symbol) == 5 and symbol != s3 and len(s4 & symbol) == 3)
+    s2 = find(input_symbols, lambda symbol: len(symbol) == 5 and len(s4 & symbol) == 2)
+    s9 = find(input_symbols, lambda symbol: len(symbol) == 6 and len(s3 & symbol) == 5)
+    s0 = find(input_symbols, lambda symbol: len(symbol) == 6 and symbol != s9 and len(s1 & symbol) == 2)
+    s6 = find(input_symbols, lambda symbol: len(symbol) == 6 and symbol != s9 and symbol != s0)
+    symbol_values = [s0, s1, s2, s3, s4, s5, s6, s7, s8, s9]
+    answer += functools.reduce(lambda x, s: 10 * x + symbol_values.index(s), output_symbols, 0)
 print(answer)
