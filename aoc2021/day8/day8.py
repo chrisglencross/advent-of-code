@@ -31,13 +31,11 @@ for input_symbols, output_symbols in entries.items():
     s4 = find_symbol(input_symbols, lambda symbol: len(symbol) == 4)
     s7 = find_symbol(input_symbols, lambda symbol: len(symbol) == 3)
     s8 = find_symbol(input_symbols, lambda symbol: len(symbol) == 7)
-    s3 = find_symbol(input_symbols, lambda symbol: len(symbol) == 5 and len(s1.intersection(symbol)) == 2)
-    s5 = find_symbol(input_symbols,
-                     lambda symbol: len(symbol) == 5 and symbol != s3 and len(s4.intersection(symbol)) == 3)
-    s2 = find_symbol(input_symbols, lambda symbol: len(symbol) == 5 and len(s4.intersection(symbol)) == 2)
-    s9 = find_symbol(input_symbols, lambda symbol: len(symbol) == 6 and len(s3.intersection(symbol)) == 5)
-    s0 = find_symbol(input_symbols,
-                     lambda symbol: len(symbol) == 6 and symbol != s9 and len(s1.intersection(symbol)) == 2)
+    s3 = find_symbol(input_symbols, lambda symbol: len(symbol) == 5 and len(s1 & symbol) == 2)
+    s5 = find_symbol(input_symbols, lambda symbol: len(symbol) == 5 and symbol != s3 and len(s4 & symbol) == 3)
+    s2 = find_symbol(input_symbols, lambda symbol: len(symbol) == 5 and len(s4 & symbol) == 2)
+    s9 = find_symbol(input_symbols, lambda symbol: len(symbol) == 6 and len(s3 & symbol) == 5)
+    s0 = find_symbol(input_symbols, lambda symbol: len(symbol) == 6 and symbol != s9 and len(s1 & symbol) == 2)
     s6 = find_symbol(input_symbols, lambda symbol: len(symbol) == 6 and symbol != s9 and symbol != s0)
     symbols = [(s0, 0), (s1, 1), (s2, 2), (s3, 3), (s4, 4), (s5, 5), (s6, 6), (s7, 7), (s8, 8), (s9, 9)]
     answer += functools.reduce(
