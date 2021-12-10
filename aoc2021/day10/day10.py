@@ -3,6 +3,7 @@
 # See https://adventofcode.com/2021/day/10
 import functools
 
+
 def scan(line):
     pairs = {"(": ")", "[": "]", "{": "}", "<": ">"}
     stack = []
