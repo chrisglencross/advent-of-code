@@ -15,9 +15,8 @@ with open("input.txt") as f:
 
 
 def fold(paper, instruction):
-    xy, line_no = instruction
-    return set(((x, 2 * line_no - y if y > line_no else y) if xy == 'y' else (2 * line_no - x if x > line_no else x, y))
-               for x, y in paper)
+    xy, n = instruction
+    return set(((x, 2 * n - y if y > n else y) if xy == 'y' else (2 * n - x if x > n else x, y)) for x, y in paper)
 
 
 # Part 1
