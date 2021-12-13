@@ -8,19 +8,19 @@ from aoc2021.modules import grid as g
 
 with open("input.txt") as f:
     blocks = f.read().split("\n\n")
-    paper = set((int(x), int(y)) for x, y in [line.split(",") for line in blocks[0].split("\n")])
-    instructions = [(xy, int(n))
-                    for line in blocks[1].split("\n")
-                    for xy, n in [re.search("^fold along ([xy])=([0-9]+)$", line).groups()]]
+    paper = [(int(x), int(y)) for x, y in [line.split(",") for line in blocks[0].split("\n")]]
+    folds = [(xy, int(n))
+             for line in blocks[1].split("\n")
+             for xy, n in [re.search("^fold along ([xy])=([0-9]+)$", line).groups()]]
 
 
-def fold(paper, instruction):
-    xy, n = instruction
-    return set(((x, 2 * n - y if y > n else y) if xy == 'y' else (2 * n - x if x > n else x, y)) for x, y in paper)
+def apply(paper, fold):
+    xy, n = fold
+    return [((x, 2 * n - y if y > n else y) if xy == 'y' else (2 * n - x if x > n else x, y)) for x, y in paper]
 
 
 # Part 1
-print(len(fold(paper, instructions[0])))
+print(len(apply(paper, folds[0])))
 
 # Part 2
-g.Grid(dict((coords, '#') for coords in reduce(fold, instructions, paper))).print()
+g.Grid(dict((coords, '#') for coords in reduce(apply, folds, paper))).print()
