@@ -10,8 +10,8 @@ from aoc2019.modules.directions import COMPASS_DIRECTIONS
 Coords = Tuple[int, int]
 
 
-def default_is_navigable(grid: Grid, from_coord: Coords, to_coord: Coords):
-    return grid[from_coord] in {"."} and grid[to_coord] in {"."}
+def default_distance_function(grid: Grid, from_coord: Coords, to_coord: Coords):
+    return 1 if grid[from_coord] in {"."} and grid[to_coord] in {"."} else None
 
 
 def default_node_factory(coords):
@@ -110,31 +110,33 @@ class Grid:
     def build_graph(self,
                     directions=COMPASS_DIRECTIONS.values(),
                     node_factory=default_node_factory,
-                    is_navigable=default_is_navigable) -> nx.Graph:
+                    distance_function=default_distance_function) -> nx.Graph:
         graph = nx.Graph()
-        self.add_graph_edges(graph, directions, node_factory, is_navigable)
+        self.add_graph_edges(graph, directions, node_factory, distance_function)
         return graph
 
     def build_digraph(self,
                       directions=COMPASS_DIRECTIONS.values(),
                       node_factory=default_node_factory,
-                      is_navigable=default_is_navigable) -> nx.DiGraph:
+                      distance_function=default_distance_function) -> nx.DiGraph:
         graph = nx.DiGraph()
-        self.add_graph_edges(graph, directions, node_factory, is_navigable)
+        self.add_graph_edges(graph, directions, node_factory, distance_function)
         return graph
 
     def add_graph_edges(self, graph: nx.Graph,
                         directions=COMPASS_DIRECTIONS.values(),
                         node_factory=default_node_factory,
-                        is_navigable=default_is_navigable):
+                        distance_function=default_distance_function):
         for from_coords, from_symbol in self.items():
             from_node = node_factory(from_coords)
             for direction in directions:
                 to_coords = direction.move(from_coords)
                 to_symbol = self.get(to_coords)
-                if to_symbol and is_navigable(self, from_coords, to_coords):
-                    to_node = node_factory(to_coords)
-                    graph.add_edge(from_node, to_node, distance=1)
+                if to_symbol:
+                    distance = distance_function(self, from_coords, to_coords)
+                    if distance is not None:
+                        to_node = node_factory(to_coords)
+                        graph.add_edge(from_node, to_node, distance=distance)
 
     def print(self):
         textgridprinter.TextGridPrinter().print(self)

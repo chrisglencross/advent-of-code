@@ -1,6 +1,6 @@
 import os
 
-year = "2020"
+year = "2021"
 dir = f"aoc{year}"
 if not os.path.exists(f"{dir}"):
     os.mkdir(f"{dir}")

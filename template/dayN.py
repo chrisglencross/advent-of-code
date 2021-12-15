@@ -5,20 +5,9 @@
 import re
 from dataclasses import dataclass
 
+with open("testinput.txt") as f:
+    lines = [line.strip() for line in f.readlines()]
 
-@dataclass
-class MyClass:
-    name: str
-    size: int
-    properties: dict
+for line in lines:
+    f1, f2 = re.match("^([0-9]+) @ ([0-9]+)$", line)
 
-
-if __name__ == "__main__":
-
-    with open("input.txt") as f:
-        lines = f.readlines()
-
-    for line in lines:
-        match = re.search("^([0-9]+) @ ([0-9]+),([0-9]+): ([0-9]+)x([0-9]+)$", line.strip())
-        if match:
-            field1 = match.group(1)
