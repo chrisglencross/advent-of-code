@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import functools
 import itertools
-from abc import abstractmethod
+from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from typing import Optional
 
 
 @dataclass
-class Node:
+class Node(ABC):
     parent: Optional["PairNode"] = None
 
     def depth(self):
@@ -19,9 +19,17 @@ class Node:
         else:
             return 1 + self.parent.depth()
 
+    def find_explode_candidate(self) -> Optional[PairNode]:
+        return None
+
+    @abstractmethod
+    def find_split_candidate(self) -> Optional[IntNode]:
+        pass
+
     @abstractmethod
     def magnitude(self):
         pass
+
 
 @dataclass
 class IntNode(Node):
@@ -30,8 +38,16 @@ class IntNode(Node):
     def find_number(self, left, prune) -> Optional[IntNode]:
         return self
 
-    def magnitude(self):
+    def magnitude(self) -> int:
         return self.value
+
+    def find_split_candidate(self) -> Optional[IntNode]:
+        return self if self.value > 9 else None
+
+    def split(self):
+        left = IntNode(value=self.value // 2)
+        right = IntNode(value=self.value - left.value)
+        self.parent.replace_child(self, pair(left, right))
 
     def __str__(self):
         return str(self.value)
@@ -60,6 +76,24 @@ class PairNode(Node):
                      for number in (node.find_number(search_left, self) for node in recurse_to)
                      if number is not None), None)
 
+    def find_explode_candidate(self) -> Optional[PairNode]:
+        if isinstance(self.left, IntNode) and isinstance(self.right, IntNode) and self.depth() >= 4:
+            return self
+        else:
+            return self.left.find_explode_candidate() or self.right.find_explode_candidate()
+
+    def explode(self):
+        left = self.parent.find_number(True, self)
+        right = self.parent.find_number(False, self)
+        if left:
+            left.value += self.left.value
+        if right:
+            right.value += self.right.value
+        self.parent.replace_child(self, IntNode(value=0))
+
+    def find_split_candidate(self) -> Optional[IntNode]:
+        return self.left.find_split_candidate() or self.right.find_split_candidate()
+
     def replace_child(self, old_child, new_child):
         new_child.parent = self
         if old_child == self.left:
@@ -67,23 +101,21 @@ class PairNode(Node):
         elif old_child == self.right:
             self.right = new_child
 
-    def magnitude(self):
+    def magnitude(self) -> int:
         return self.left.magnitude() * 3 + self.right.magnitude() * 2
 
     def __str__(self):
         return f"[{self.left}, {self.right}]"
 
 
-def pair(left, right):
-    if not left:
-        return right
-    parent = PairNode(left=left, right=right, parent=None)
+def pair(left, right) -> PairNode:
+    parent = PairNode(left=left, right=right)
     left.parent = parent
     right.parent = parent
     return parent
 
 
-def parse_node(chars: list):
+def parse_node(chars: list) -> Node:
     c = chars.pop(0)
     if c == '[':
         left = parse_node(chars)
@@ -92,59 +124,21 @@ def parse_node(chars: list):
         chars.pop(0)  # ]
         return pair(left, right)
     else:
-        return IntNode(value=int(c), parent=None)
-
-
-def find_explode_candidate(node: PairNode) -> Optional[PairNode]:
-    if isinstance(node.left, IntNode) and isinstance(node.right, IntNode):
-        depth = node.depth()
-        if depth >= 4:
-            return node
-    if isinstance(node.left, PairNode):
-        left = find_explode_candidate(node.left)
-        if left:
-            return left
-    if isinstance(node.right, PairNode):
-        right = find_explode_candidate(node.right)
-        if right:
-            return right
-    return None
+        return IntNode(value=int(c))
 
 
 def explode(node: PairNode) -> bool:
-    explode_node = find_explode_candidate(node)
+    explode_node = node.find_explode_candidate()
     if explode_node:
-        parent = explode_node.parent
-        left = parent.find_number(True, explode_node)
-        right = parent.find_number(False, explode_node)
-        if left:
-            left.value += explode_node.left.value
-        if right:
-            right.value += explode_node.right.value
-        parent.replace_child(explode_node, IntNode(value=0, parent=None))
-        return True
-    return False
-
-
-def find_split_candidate(node: Node) -> IntNode:
-    if isinstance(node, IntNode):
-        return node if node.value > 9 else None
-    if isinstance(node, PairNode):
-        result = find_split_candidate(node.left)
-        if result is None:
-            result = find_split_candidate(node.right)
-        return result
+        explode_node.explode()
+    return bool(explode_node)
 
 
 def split(node: Node) -> bool:
-    split_node = find_split_candidate(node)
+    split_node = node.find_split_candidate()
     if split_node:
-        left = IntNode(value=split_node.value // 2, parent=None)
-        right = IntNode(value=split_node.value - left.value, parent=None)
-        split_node.parent.replace_child(split_node, pair(left, right))
-        return True
-    else:
-        return False
+        split_node.split()
+    return bool(split_node)
 
 
 def add(left: Node, right: Node) -> PairNode:
