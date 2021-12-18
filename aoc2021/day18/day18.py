@@ -2,6 +2,7 @@
 # See https://adventofcode.com/2021/day/18
 from __future__ import annotations
 
+import functools
 import itertools
 from dataclasses import dataclass
 from typing import Optional
@@ -157,16 +158,7 @@ with open("input.txt") as f:
     lines = [line.strip() for line in f.readlines()]
 
 # Part 1
-total = None
-for line in lines:
-    value = parse_node(list(line))
-    total = add(total, value)
-print(magnitude(total))
+print(magnitude(functools.reduce(add, [parse_node(list(line)) for line in lines])))
 
 # Part 2
-magnitudes = []
-for p in itertools.permutations(lines, 2):
-    value1 = parse_node(list(p[0]))
-    value2 = parse_node(list(p[1]))
-    magnitudes.append(magnitude(add(value1, value2)))
-print(max(magnitudes))
+print(max(magnitude(add(parse_node(list(p[0])), parse_node(list(p[1])))) for p in itertools.permutations(lines, 2)))
