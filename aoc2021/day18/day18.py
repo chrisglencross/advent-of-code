@@ -115,18 +115,18 @@ def explode(node: PairNode) -> bool:
     return False
 
 
-def find_large_int(node: Node) -> IntNode:
+def find_split_candidate(node: Node) -> IntNode:
     if isinstance(node, IntNode):
         return node if node.value > 9 else None
     if isinstance(node, PairNode):
-        result = find_large_int(node.left)
+        result = find_split_candidate(node.left)
         if result is None:
-            result = find_large_int(node.right)
+            result = find_split_candidate(node.right)
         return result
 
 
 def split(node: Node) -> bool:
-    to_split = find_large_int(node)
+    to_split = find_split_candidate(node)
     if to_split:
         left = IntNode(value=to_split.value // 2, parent=None)
         right = IntNode(value=to_split.value - left.value, parent=None)
