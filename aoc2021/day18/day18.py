@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import functools
 import itertools
+from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Optional
 
@@ -18,6 +19,9 @@ class Node:
         else:
             return 1 + self.parent.depth()
 
+    @abstractmethod
+    def magnitude(self):
+        pass
 
 @dataclass
 class IntNode(Node):
@@ -25,6 +29,9 @@ class IntNode(Node):
 
     def find_number(self, left, prune) -> Optional[IntNode]:
         return self
+
+    def magnitude(self):
+        return self.value
 
     def __str__(self):
         return str(self.value)
@@ -35,31 +42,33 @@ class PairNode(Node):
     left: Node = None
     right: Node = None
 
-    def find_number(self, search_left, prune) -> Optional[IntNode]:
+    def find_number(self, search_left, origin_node) -> Optional[IntNode]:
+        """Searches for the closest IntNode to the syntactic left or right of a neighbouring origin node."""
         recurse_to = []
-        if search_left and self is not prune and self.left is not prune:
-            if self.right is not prune:
+        if search_left and self.left is not origin_node:
+            if self.right is not origin_node:
                 recurse_to.append(self.right)
             recurse_to.append(self.left)
-        if not search_left and self is not prune and self.right is not prune:
-            if self.left is not prune:
+        if not search_left and self.right is not origin_node:
+            if self.left is not origin_node:
                 recurse_to.append(self.left)
             recurse_to.append(self.right)
-        if self.parent is not None and self.parent is not prune:
+        if self.parent is not None and self.parent is not origin_node:
             recurse_to.append(self.parent)
 
-        for node in recurse_to:
-            found = node.find_number(search_left, self)
-            if found:
-                return found
-        return None
+        return next((number
+                     for number in (node.find_number(search_left, self) for node in recurse_to)
+                     if number is not None), None)
 
-    def replace_child(self, child, new_child):
+    def replace_child(self, old_child, new_child):
         new_child.parent = self
-        if child == self.left:
+        if old_child == self.left:
             self.left = new_child
-        elif child == self.right:
+        elif old_child == self.right:
             self.right = new_child
+
+    def magnitude(self):
+        return self.left.magnitude() * 3 + self.right.magnitude() * 2
 
     def __str__(self):
         return f"[{self.left}, {self.right}]"
@@ -74,7 +83,7 @@ def pair(left, right):
     return parent
 
 
-def parse_node(chars : list):
+def parse_node(chars: list):
     c = chars.pop(0)
     if c == '[':
         left = parse_node(chars)
@@ -86,32 +95,33 @@ def parse_node(chars : list):
         return IntNode(value=int(c), parent=None)
 
 
-def find_explosion_candidate(node: PairNode) -> Optional[PairNode]:
+def find_explode_candidate(node: PairNode) -> Optional[PairNode]:
     if isinstance(node.left, IntNode) and isinstance(node.right, IntNode):
         depth = node.depth()
         if depth >= 4:
             return node
     if isinstance(node.left, PairNode):
-        left = find_explosion_candidate(node.left)
+        left = find_explode_candidate(node.left)
         if left:
             return left
     if isinstance(node.right, PairNode):
-        right = find_explosion_candidate(node.right)
+        right = find_explode_candidate(node.right)
         if right:
             return right
     return None
 
 
 def explode(node: PairNode) -> bool:
-    to_explode = find_explosion_candidate(node)
-    if to_explode:
-        to_left = to_explode.find_number(True, to_explode)
-        to_right = to_explode.find_number(False, to_explode)
-        if to_left:
-            to_left.value += to_explode.left.value
-        if to_right:
-            to_right.value += to_explode.right.value
-        to_explode.parent.replace_child(to_explode, IntNode(value=0, parent=None))
+    explode_node = find_explode_candidate(node)
+    if explode_node:
+        parent = explode_node.parent
+        left = parent.find_number(True, explode_node)
+        right = parent.find_number(False, explode_node)
+        if left:
+            left.value += explode_node.left.value
+        if right:
+            right.value += explode_node.right.value
+        parent.replace_child(explode_node, IntNode(value=0, parent=None))
         return True
     return False
 
@@ -127,38 +137,28 @@ def find_split_candidate(node: Node) -> IntNode:
 
 
 def split(node: Node) -> bool:
-    to_split = find_split_candidate(node)
-    if to_split:
-        left = IntNode(value=to_split.value // 2, parent=None)
-        right = IntNode(value=to_split.value - left.value, parent=None)
-        to_split.parent.replace_child(to_split, pair(left, right))
+    split_node = find_split_candidate(node)
+    if split_node:
+        left = IntNode(value=split_node.value // 2, parent=None)
+        right = IntNode(value=split_node.value - left.value, parent=None)
+        split_node.parent.replace_child(split_node, pair(left, right))
         return True
     else:
         return False
 
 
-def add(left, right):
-    total = pair(left, right)
-    while True:
-        while explode(total):
-            pass
-        if not split(total):
-            break
-    return total
-
-
-def magnitude(node: Node):
-    if isinstance(node, IntNode):
-        return node.value
-    elif isinstance(node, PairNode):
-        return 3*magnitude(node.left) + 2*magnitude(node.right)
+def add(left: Node, right: Node) -> PairNode:
+    value = pair(left, right)
+    while explode(value) or split(value):
+        pass
+    return value
 
 
 with open("input.txt") as f:
     lines = [line.strip() for line in f.readlines()]
 
 # Part 1
-print(magnitude(functools.reduce(add, [parse_node(list(line)) for line in lines])))
+print(functools.reduce(add, [parse_node(list(line)) for line in lines]).magnitude())
 
 # Part 2
-print(max(magnitude(add(parse_node(list(p[0])), parse_node(list(p[1])))) for p in itertools.permutations(lines, 2)))
+print(max(add(parse_node(list(p[0])), parse_node(list(p[1]))).magnitude() for p in itertools.permutations(lines, 2)))
