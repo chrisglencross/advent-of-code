@@ -3,15 +3,6 @@
 # See https://adventofcode.com/2021/day/19
 import itertools
 
-with open("input.txt") as f:
-    blocks = [block.strip() for block in f.read().replace('\r', '').split('\n\n')]
-    scanners = []
-    for block in blocks:
-        beacons = []
-        for line in block.split('\n')[1:]:
-            beacons.append(tuple(int(n) for n in line.split(",")))
-        scanners.append(beacons)
-
 ROTATIONS = [
     lambda x, y, z: (x, y, z),
     lambda x, y, z: (y, x, -z),
@@ -38,14 +29,14 @@ ROTATIONS = [
     lambda x, y, z: (-y, -z, x),
     lambda x, y, z: (-z, y, x)
 ]
-ROTATION_INVERSES = {}
-ROTATION_ADDITIONS = {}
 
 
 def rotate(coords, num):
     return ROTATIONS[num](*coords)
 
 
+ROTATION_INVERSES = {}
+ROTATION_ADDITIONS = {}
 p0 = (1, 2, 3)
 for r0 in range(24):
     for r1 in range(24):
@@ -83,7 +74,7 @@ def find_scanners(scanners):
             s0 = scanners[n0]
             n1s_to_check = unfound_scanner_nos - already_checked.setdefault(n0, set())
             for n1 in n1s_to_check:
-                print(f"Checking {n0} <-> {n1}")
+                print(f"Checking {n0} -> {n1}")
                 already_checked[n0].add(n1)
                 s1 = scanners[n1]
                 for sb0, sb1 in itertools.product(s0, s1):
@@ -105,22 +96,28 @@ def find_scanners(scanners):
     return found_scanners
 
 
-def find_beacons(scanners, scanner_locations):
-    beacons = set()
-    for scanner_no in range(0, len(scanners)):
-        scanner_beacons = scanners[scanner_no]
+def find_distinct_beacons(scanner_beacons, scanner_locations):
+    distinct_beacons = set()
+    for scanner_no in range(0, len(scanner_beacons)):
+        beacons = scanner_beacons[scanner_no]
         scanner_orientation, scanner_coords = scanner_locations[scanner_no]
-        for scanner_beacon in scanner_beacons:
-            relative_coords = rotate(scanner_beacon, scanner_orientation)
+        for beacon in beacons:
+            relative_coords = rotate(beacon, scanner_orientation)
             absolute_coords = add(scanner_coords, relative_coords)
-            beacons.add(absolute_coords)
-    return beacons
+            distinct_beacons.add(absolute_coords)
+    return distinct_beacons
 
+
+with open("input.txt") as f:
+    scanner_beacons = [
+        [tuple(int(n) for n in line.split(",")) for line in block.split('\n')[1:]]
+        for block in [block.strip() for block in f.read().replace('\r', '').split('\n\n')]
+    ]
 
 # Part 1
-scanner_locations = find_scanners(scanners)
-beacons = find_beacons(scanners, scanner_locations)
-print(len(beacons))
+scanner_locations = find_scanners(scanner_beacons)
+distinct_beacons = find_distinct_beacons(scanner_beacons, scanner_locations)
+print(len(distinct_beacons))
 
 # Part 2
 print(max(
