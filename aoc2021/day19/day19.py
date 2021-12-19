@@ -68,13 +68,10 @@ def add(c1, c2):
     return c1[0]+c2[0], c1[1]+c2[1], c1[2]+c2[2]
 
 
-def count_common_beacons(s0, s1, s1orientation, translation):
-    result = 0
-    sb1rs = [add(rotate(sb1, s1orientation), translation) for sb1 in s1]
-    for sb0, sb1r in itertools.product(s0, sb1rs):
-        if sb0 == sb1r:
-            result += 1
-    return result
+def count_common_beacons(s0, s1, s1_orientation, translation):
+    # Rotate and shift s1 beacons to the same origin as s0 and compare
+    s1_adjusted = set(add(rotate(sb1, s1_orientation), translation) for sb1 in s1)
+    return len(s1_adjusted.intersection(s0))
 
 
 found_scanners = {0: (0, (0, 0, 0))}
