@@ -68,9 +68,9 @@ def add(c1, c2):
     return c1[0]+c2[0], c1[1]+c2[1], c1[2]+c2[2]
 
 
-def count_common_beacons(s0, s1, s1rotation, translation):
+def count_common_beacons(s0, s1, s1orientation, translation):
     result = 0
-    sb1rs = [add(rotate(sb1, s1rotation), translation) for sb1 in s1]
+    sb1rs = [add(rotate(sb1, s1orientation), translation) for sb1 in s1]
     for sb0, sb1r in itertools.product(s0, sb1rs):
         if sb0 == sb1r:
             result += 1
@@ -88,27 +88,18 @@ while unfound_scanner_nos:
             print(f"Checking overlap {n0} <-> {n1}")
             already_checked.setdefault(n0, set()).add(n1)
             s1 = scanners[n1]
-            if n1 in found_scanners.keys():
-                continue
             for sb0, sb1 in itertools.product(s0, s1):
-                for s1rotation in range(0, 24):
-                    sb1r = rotate(sb1, s1rotation)
-                    translation = (sb0[0] - sb1r[0], sb0[1] - sb1r[1], sb0[2] - sb1r[2])
-                    n = count_common_beacons(s0, s1, s1rotation, translation)
+                for s1_orientation_relative_to_s0 in range(0, 24):
+                    rotated_sb1 = rotate(sb1, s1_orientation_relative_to_s0)
+                    translation = (sb0[0] - rotated_sb1[0], sb0[1] - rotated_sb1[1], sb0[2] - rotated_sb1[2])
+                    n = count_common_beacons(s0, s1, s1_orientation_relative_to_s0, translation)
                     if n == 12:
+                        s0_orientation, s0_position = found_scanners[n0]
+                        s1_position = add(rotate(translation, s0_orientation), s0_position)
+                        s1_orientation = add_rotation(s1_orientation_relative_to_s0, s0_orientation)
 
-                        s0_rotation_relative_to_origin, s0_translation_relative_to_origin = found_scanners[n0]
-                        translation_relative_to_origin = rotate(translation, s0_rotation_relative_to_origin)
-                        s1_translation_relative_to_origin = add(translation_relative_to_origin, s0_translation_relative_to_origin)
-
-                        # reverse(add(reverse(x), reverse(y))) does not appear to be the same as add(x, y)
-                        # for rotations
-                        s1_rotation_relative_to_origin = reverse_rotation(add_rotation(
-                            reverse_rotation(s0_rotation_relative_to_origin),
-                            reverse_rotation(s1rotation)))
-
-                        print(f" -> Scanner {n1} is at ({s1_translation_relative_to_origin}) relative to origin with orientation {s1_rotation_relative_to_origin}")
-                        found_scanners[n1] = (s1_rotation_relative_to_origin, s1_translation_relative_to_origin)
+                        print(f" -> Scanner {n1} is at ({s1_position}) relative to origin with orientation {s1_orientation}")
+                        found_scanners[n1] = (s1_orientation, s1_position)
                         unfound_scanner_nos.remove(n1)
                         break
                 if n1 in found_scanners.keys():
