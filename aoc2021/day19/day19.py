@@ -77,7 +77,7 @@ def count_common_beacons(s0, s1, s1rotation, translation):
     return result
 
 
-found_scanners = {0: (0, (0, 0, 0)) }
+found_scanners = {0: (0, (0, 0, 0))}
 unfound_scanner_nos = set(range(1, len(scanners)))
 already_checked = {}
 while unfound_scanner_nos:
