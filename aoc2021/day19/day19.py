@@ -65,7 +65,7 @@ def add_rotation(r1, r2):
 
 
 def add(c1, c2):
-    return c1[0]+c2[0], c1[1]+c2[1], c1[2]+c2[2]
+    return c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2]
 
 
 def count_common_beacons(s0, s1, s1_orientation, translation):
@@ -74,49 +74,56 @@ def count_common_beacons(s0, s1, s1_orientation, translation):
     return len(s1_adjusted.intersection(s0))
 
 
-found_scanners = {0: (0, (0, 0, 0))}
-unfound_scanner_nos = set(range(1, len(scanners)))
-already_checked = {}
-while unfound_scanner_nos:
-    for n0 in list(found_scanners.keys()):
-        s0 = scanners[n0]
-        n1s_to_check = unfound_scanner_nos - already_checked.get(n0, set())
-        for n1 in n1s_to_check:
-            print(f"Checking overlap {n0} <-> {n1}")
-            already_checked.setdefault(n0, set()).add(n1)
-            s1 = scanners[n1]
-            for sb0, sb1 in itertools.product(s0, s1):
-                for s1_orientation_relative_to_s0 in range(0, 24):
-                    rotated_sb1 = rotate(sb1, s1_orientation_relative_to_s0)
-                    translation = (sb0[0] - rotated_sb1[0], sb0[1] - rotated_sb1[1], sb0[2] - rotated_sb1[2])
-                    n = count_common_beacons(s0, s1, s1_orientation_relative_to_s0, translation)
-                    if n == 12:
-                        s0_orientation, s0_position = found_scanners[n0]
-                        s1_position = add(rotate(translation, s0_orientation), s0_position)
-                        s1_orientation = add_rotation(s1_orientation_relative_to_s0, s0_orientation)
+def find_scanners(scanners):
+    found_scanners = {0: (0, (0, 0, 0))}
+    unfound_scanner_nos = set(range(1, len(scanners)))
+    already_checked = {}
+    while unfound_scanner_nos:
+        for n0 in list(found_scanners.keys()):
+            s0 = scanners[n0]
+            n1s_to_check = unfound_scanner_nos - already_checked.setdefault(n0, set())
+            for n1 in n1s_to_check:
+                print(f"Checking {n0} <-> {n1}")
+                already_checked[n0].add(n1)
+                s1 = scanners[n1]
+                for sb0, sb1 in itertools.product(s0, s1):
+                    for s1_orientation_relative_to_s0 in range(0, 24):
+                        rotated_sb1 = rotate(sb1, s1_orientation_relative_to_s0)
+                        translation = (sb0[0] - rotated_sb1[0], sb0[1] - rotated_sb1[1], sb0[2] - rotated_sb1[2])
+                        n = count_common_beacons(s0, s1, s1_orientation_relative_to_s0, translation)
+                        if n == 12:
+                            s0_orientation, s0_position = found_scanners[n0]
+                            s1_position = add(rotate(translation, s0_orientation), s0_position)
+                            s1_orientation = add_rotation(s1_orientation_relative_to_s0, s0_orientation)
 
-                        print(f" -> Scanner {n1} is at ({s1_position}) relative to origin with orientation {s1_orientation}")
-                        found_scanners[n1] = (s1_orientation, s1_position)
-                        unfound_scanner_nos.remove(n1)
+                            print(f" -> Scanner {n1} at ({s1_position}) with orientation {s1_orientation}")
+                            found_scanners[n1] = (s1_orientation, s1_position)
+                            unfound_scanner_nos.remove(n1)
+                            break
+                    if n1 in found_scanners.keys():
                         break
-                if n1 in found_scanners.keys():
-                    break
+    return found_scanners
 
-# Found all the scanners, now find the beacons
-beacons = set()
-for scanner_no in range(0, len(scanners)):
-    scanner_beacons = scanners[scanner_no]
-    scanner_orientation, scanner_coords = found_scanners[scanner_no]
-    for scanner_beacon in scanner_beacons:
-        relative_coords = rotate(scanner_beacon, scanner_orientation)
-        absolute_coords = add(scanner_coords, relative_coords)
-        beacons.add(absolute_coords)
+
+def find_beacons(scanners, scanner_locations):
+    beacons = set()
+    for scanner_no in range(0, len(scanners)):
+        scanner_beacons = scanners[scanner_no]
+        scanner_orientation, scanner_coords = scanner_locations[scanner_no]
+        for scanner_beacon in scanner_beacons:
+            relative_coords = rotate(scanner_beacon, scanner_orientation)
+            absolute_coords = add(scanner_coords, relative_coords)
+            beacons.add(absolute_coords)
+    return beacons
+
 
 # Part 1
+scanner_locations = find_scanners(scanners)
+beacons = find_beacons(scanners, scanner_locations)
 print(len(beacons))
 
 # Part 2
-distances = []
-for (_, s1), (_, s2) in itertools.combinations(found_scanners.values(), 2):
-    distances.append(abs(s1[0]-s2[0]) + abs(s1[1]-s2[1]) + abs(s1[2]-s2[2]))
-print(max(distances))
+print(max(
+    abs(s1[0] - s2[0]) + abs(s1[1] - s2[1]) + abs(s1[2] - s2[2])
+    for (_, s1), (_, s2) in itertools.combinations(scanner_locations.values(), 2)
+))
