@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # Advent of code 2021 day 22
 # See https://adventofcode.com/2021/day/22
-
+import itertools
 import re
 from dataclasses import dataclass
 from typing import Tuple, List
@@ -14,17 +14,14 @@ grid = set()
 for line in lines:
     on_off, *nums = re.match(r"^(on|off) x=([-0-9]+)\.\.([-0-9]+),y=([-0-9]+)\.\.([-0-9]+),z=([-0-9]+)\.\.([-0-9]+)$",
                              line).groups()
-    state = on_off == "on"
     min_x, max_x = max(int(nums[0]), -50), min(int(nums[1]), 50)
     min_y, max_y = max(int(nums[2]), -50), min(int(nums[3]), 50)
     min_z, max_z = max(int(nums[4]), -50), min(int(nums[5]), 50)
-    for z in range(min_z, max_z + 1):
-        for y in range(min_y, max_y + 1):
-            for x in range(min_x, max_x + 1):
-                if state:
-                    grid.add((x, y, z))
-                else:
-                    grid.discard((x, y, z))
+    for x, y, z in itertools.product(range(min_x, max_x + 1), range(min_y, max_y + 1), range(min_z, max_z + 1)):
+        if on_off == "on":
+            grid.add((x, y, z))
+        else:
+            grid.discard((x, y, z))
 print(len(grid))
 
 
@@ -33,21 +30,21 @@ print(len(grid))
 @dataclass
 class Shape:
     on: bool
-    coords: Tuple[Tuple[int, int, int], Tuple[int, int, int]]
+    region: Tuple[Tuple[int, int, int], Tuple[int, int, int]]
     exclusion: List["Shape"]
 
     def volume(self):
-        self_volume = volume(self.coords)
+        self_volume = volume(self.region)
         for shape in self.exclusion:
-            self_volume -= shape.intersected_volume(self.coords)
+            self_volume -= shape.intersected_volume(self.region)
         return self_volume
 
     def add_exclusion(self, other: "Shape"):
-        if intersected_region(self.coords, other.coords):
+        if intersected_region(self.region, other.region):
             self.exclusion.append(other)
 
     def intersected_volume(self, other_coords):
-        intersection = intersected_region(self.coords, other_coords)
+        intersection = intersected_region(self.region, other_coords)
         if not intersection:
             return 0
         intersected_volume = volume(intersection)
@@ -76,16 +73,13 @@ shapes = []
 for line in lines:
     on_off, *nums = re.match(r"^(on|off) x=([-0-9]+)\.\.([-0-9]+),y=([-0-9]+)\.\.([-0-9]+),z=([-0-9]+)\.\.([-0-9]+)$",
                              line).groups()
-    state = on_off == "on"
     min_x, max_x, min_y, max_y, min_z, max_z = (int(n) for n in nums)
-    region = (min_x, min_y, min_z), (max_x + 1, max_y + 1, max_z + 1)
-    shape = Shape(on=state, coords=region, exclusion=list())
+    shape = Shape(on=(on_off == "on"),
+                  region=((min_x, min_y, min_z), (max_x + 1, max_y + 1, max_z + 1)),
+                  exclusion=list())
     for previous_shape in shapes:
         previous_shape.add_exclusion(shape)
     shapes.append(shape)
 
-total_on = 0
-for shape in shapes:
-    if shape.on:
-        total_on += shape.volume()
-print(total_on)
+print(sum(shape.volume() for shape in shapes if shape.on))
+
