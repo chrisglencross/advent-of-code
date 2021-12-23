@@ -2,7 +2,6 @@
 # Advent of code 2021 day 23
 # See https://adventofcode.com/2021/day/23
 import bisect
-
 from aoc2021.modules import grid as g
 
 hallway_y = 1
