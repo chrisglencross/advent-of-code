@@ -11,79 +11,67 @@ with open("input.txt") as f:
     lines = [line.strip() for line in f.readlines()]
 
 var_assignments = {"w": -1, "x": -1, "y": -1, "z": -1, "inp": -1}
+
+
 def read_renamed(var):
     if var in var_assignments.keys():
         suffix = var_assignments[var]
         if suffix < 0:
-            # never assigned so we know it is zero
+            # never assigned so we know it is literal zero
             return 0
         else:
             return f"{var}_{suffix}"
     else:
         return int(var)
 
+
 def write_renamed(var):
     var_assignments[var] += 1
     return read_renamed(var)
 
-# Register renaming
-instructions = []
-for line in lines:
-    words = line.split(" ")
-    match words:
-        case ["inp", arg1]:
-            out = write_renamed(arg1)
-            instructions.append((out, "inp", write_renamed("inp")))
-        case [op, arg1, arg2]:
-            in1 = read_renamed(arg1)
-            in2 = read_renamed(arg2)
-            out = write_renamed(arg1)
-            instructions.append((out, op, in1, in2))
-        case _:
-            raise ValueError(f"Bad command ${line}")
 
-def build_expressions(instructions, register_expressions):
-
-    def get_register_value(var):
-        if isinstance(var, int):
-            return var
-        else:
-            return register_expressions.get(var, var)
-
-    for instruction in instructions:
-        out, op, *args = instruction
-        if op == "inp":
-            register_expressions[out] = args[0]
-            continue
-
-        arg0 = args[0]
-        arg1 = args[1]
-        val0 = get_register_value(arg0)
-        val1 = get_register_value(arg1)
-
-        p0 = val0 if isinstance(val0, int) else arg0
-        p1 = val1 if isinstance(val1, int) else arg1
-        register_expressions[out] = op, p0, p1
-
-        # Create a synthetic not-equal instruction
-        if op == "eql" and p1 == 0 and (val0, tuple) and val0[0] == "eql":
-            register_expressions[out] = "neq", val0[1], val0[2]
+def load_simple_expressions(lines):
+    # Load instructions with register renaming for clarity
+    expressions = {}
+    for line in lines:
+        words = line.split(" ")
+        match words:
+            case ["inp", arg1]:
+                out = write_renamed(arg1)
+                expressions[out] = write_renamed("inp")
+            case [op, arg1, arg2]:
+                in1 = read_renamed(arg1)
+                in2 = read_renamed(arg2)
+                out = write_renamed(arg1)
+                expressions[out] = op, in1, in2
+            case _:
+                raise ValueError(f"Bad command ${line}")
+    return expressions
 
 
-def count_register_usage(expressions, reference_count):
+def count_register_usage(expressions, reference_count=None):
+    if reference_count is None:
+        reference_count = defaultdict(lambda: 0)
+        reference_count[read_renamed("z")] = 1  # the output register is used
     for expression in expressions:
         if isinstance(expression, str):
             reference_count[expression] += 1
         if isinstance(expression, tuple):
             count_register_usage(expression[1:], reference_count)
+    return reference_count
 
-def simplify(expression, expressions):
-    if isinstance(expression, str) and isinstance(expressions.get(expression), int):
-        return expressions.get(expression)
+
+def simplify_expression(expression, expressions):
+
+    # Inline atomic values
+    if isinstance(expression, str) and expression in expressions and not isinstance(expressions.get(expression), tuple):
+        return expressions[expression]
+
+    # Simplify expressions involving constants
     if isinstance(expression, tuple):
         op, *args = expression
         for i, arg in enumerate(args):
-            args[i] = simplify(arg, expressions)
+            args[i] = simplify_expression(arg, expressions)
         if all(isinstance(arg, int) for arg in args):
             if op == 'mul':
                 return args[0] * args[1]
@@ -103,56 +91,23 @@ def simplify(expression, expressions):
             return args[1]
         if op == "add" and args[1] == 0:
             return args[0]
+        if op == "eql" and args[1] == 0 and isinstance(args[0], tuple) and args[0][0] == 'eql':
+            return 'neq', args[0][1], args[0][2]
         return op, *args
     else:
         return expression
 
 
-def inline_expressions(expressions: dict):
+def simplify_expressions(expressions: dict):
 
-    # Remove common subexpressions
-    common_subexpressions = dict()
-    for target, expression in expressions.items():
-        if expression not in common_subexpressions.keys():
-            common_subexpressions[expression] = target
-
+    # Simplify each expression individually
     for target, expression in list(expressions.items()):
-        if isinstance(expression, tuple):
-            op, *args = expression
-            for i, arg in enumerate(args):
-                if not isinstance(arg, int):
-                    arg_value = expressions.get(arg, arg)
-                    common_subexpression = common_subexpressions.get(arg_value)
-                    if common_subexpression:
-                        args[i] = common_subexpression
-            expressions[target] = (op, *args)
-
-    # Inline expressions which contain simple values
-    for target, expression in list(expressions.items()):
-        if isinstance(expression, str):
-            expressions[target] = expressions.get(expression, expression)
-        if isinstance(expression, tuple):
-            op, *args = expression
-            for i, arg in enumerate(args):
-                if not isinstance(arg, int):
-                    arg_value = expressions.get(arg, arg)
-                    if not isinstance(arg_value, tuple):
-                        args[i] = arg_value
-            expressions[target] = (op, *args)
-
-
-    # Simplify
-    for target, expression in list(expressions.items()):
-        simplified_expression = simplify(expression, expressions)
+        simplified_expression = simplify_expression(expression, expressions)
         if simplified_expression != expression:
             expressions[target] = simplified_expression
 
-    # Count how many times each register is used
-    reference_count = defaultdict(lambda: 0)
-    reference_count[read_renamed("z")] = 1
-    count_register_usage(expressions.values(), reference_count)
-
     # Inline complex expressions which are used only once
+    reference_count = count_register_usage(expressions.values())
     for target, expression in list(expressions.items()):
         if isinstance(expression, tuple):
             op, *args = expression
@@ -162,31 +117,14 @@ def inline_expressions(expressions: dict):
                     args[i] = arg_value
             expressions[target] = (op, *args)
 
-    # Count how many times each register is used
-    reference_count = defaultdict(lambda: 0)
-    reference_count[read_renamed("z")] = 1
-    count_register_usage(expressions.values(), reference_count)
-
-    # If register is not used, remove it
+    # If register is no longer used because it has been inlined, remove it
+    reference_count = count_register_usage(expressions.values())
     for target, expression in list(expressions.items()):
         if reference_count[target] == 0:
             expressions.pop(target)
 
 
-register_expressions = {}
-build_expressions(instructions, register_expressions)
-
-# These were set by manual inspection
-register_expressions.update({
-    'x_5': 1,
-    'x_11': 1,
-    'x_17': 1
-})
-inline_expressions(register_expressions)
-inline_expressions(register_expressions)
-inline_expressions(register_expressions)
-
-def print_expression(expression):
+def print_expression_as_python(expression):
     if isinstance(expression, tuple):
         op, *args = expression
         infix_operators = {
@@ -198,12 +136,21 @@ def print_expression(expression):
             "mod": "%"
         }
         if op in infix_operators.keys():
-            return "(" + print_expression(args[0]) + " " + infix_operators[op] + " " + print_expression(args[1]) + ")"
+            return "(" + print_expression_as_python(args[0]) + " " + infix_operators[op] + " " + print_expression_as_python(args[1]) + ")"
         else:
             return str(op)
     else:
         return str(expression)
 
-for target, expression in register_expressions.items():
-    print(f"{target} = {print_expression(expression)}")
+
+# Load simple expressions and turn into a small number of expression trees
+expressions = load_simple_expressions(lines)
+while True:
+    expression_count = len(expressions)
+    simplify_expressions(expressions)
+    if len(expressions) == expression_count:
+        break
+
+for target, expression in expressions.items():
+    print(f"{target} = {print_expression_as_python(expression)}")
 
