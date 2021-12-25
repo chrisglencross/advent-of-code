@@ -97,6 +97,8 @@ def simplify(expression, expressions):
             return 0
         if op == "mul" and args[1] == 1:
             return args[0]
+        if op == "div" and args[1] == 1:
+            return args[0]
         if op == "add" and args[0] == 0:
             return args[1]
         if op == "add" and args[1] == 0:
