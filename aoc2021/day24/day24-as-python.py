@@ -9,9 +9,11 @@ def toBase26(n):
         n //= 26
     return "_".join(digits[::-1])
 
+
 def debugBase26(n):
     if DEBUG_ENABLED:
         print(toBase26(n))
+
 
 def evaluate(inp):
 
@@ -19,6 +21,13 @@ def evaluate(inp):
 
     # Annotated and tidied version of the output from the decompiler
     # with some debug print statements to help work out max and min values manually
+
+    # Strategy:
+    # The code is shifting a base 26 value, z, left and right using rules that depend on the inputs.
+    # At the end z must be zero, so we need to make sure there are plenty of right shifts, triggered when x == False.
+    #    => choose input values that cause x to be False a sufficient number of times, especially at the end.
+    # Start with input 99999999999999 and use Python debugger to work out which low value digits need to be decreased.
+    # For part 2 start with input 11111111111111 and increase low value digits as necessary.
 
     z_8 = (((((inp_0 + 1) * 26) + (inp_1 + 9)) * 26) + (inp_2 + 11))
     debugBase26(z_8)
