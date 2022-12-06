@@ -2,3 +2,4 @@ networkx
 pyskiplist
 imageio
 numpy
+requests

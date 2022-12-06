@@ -3,7 +3,9 @@
 # See https://adventofcode.com/<YEAR>/day/<DAY>
 
 import re
-from dataclasses import dataclass
+
+import aoc2022.modules as aoc
+aoc.download_input("<YEAR>", "<DAY>")
 
 with open("testinput.txt") as f:
     lines = [line.strip() for line in f.readlines()]
