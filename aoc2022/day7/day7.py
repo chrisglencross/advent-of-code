@@ -16,18 +16,18 @@ dir_sizes = {}
 cwd = []
 for block in blocks:
     lines = block.split("\n")
-    command = lines[0]
-    if command == "cd /":
-        cwd = []
-    elif command == "cd ..":
-        cwd.pop()
-    elif command.startswith("cd "):
-        cwd.append(command.split(" ")[1])
-    elif command == "ls":
-        for line in lines[1:]:
-            if not line.startswith("dir "):
-                fsize, fname = line.split(" ")
-                add_to_dir(dir_sizes, cwd, int(fsize))
+    match lines[0].split(" "):
+        case ["cd", "/"]:
+            cwd = []
+        case ["cd", ".."]:
+            cwd.pop()
+        case ["cd", name]:
+            cwd.append(name)
+        case ["ls"]:
+            for line in lines[1:]:
+                if not line.startswith("dir "):
+                    fsize, fname = line.split(" ")
+                    add_to_dir(dir_sizes, cwd, int(fsize))
 
 # Part 1
 print(sum(s for s in dir_sizes.values() if s <= 100000))
