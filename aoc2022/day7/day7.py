@@ -36,4 +36,4 @@ print(sum([s for s in dir_sizes.values() if s <= 100000]))
 used_space = dir_sizes.get(tuple())
 free_space = 70000000 - used_space
 delete_space = 30000000 - free_space
-print(min([s for s in dir_sizes.values() if s > delete_space]))
+print(min([s for s in dir_sizes.values() if s >= delete_space]))
