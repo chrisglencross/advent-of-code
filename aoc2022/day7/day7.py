@@ -21,7 +21,7 @@ for block in blocks:
         cwd = []
     elif command == "cd ..":
         cwd.pop()
-    elif command.startswith("cd"):
+    elif command.startswith("cd "):
         cwd.append(command.split(" ")[1])
     elif command == "ls":
         for line in lines[1:]:
@@ -30,10 +30,10 @@ for block in blocks:
                 add_to_dir(dir_sizes, cwd, int(fsize))
 
 # Part 1
-print(sum([s for s in dir_sizes.values() if s <= 100000]))
+print(sum(s for s in dir_sizes.values() if s <= 100000))
 
 # Part 2
 used_space = dir_sizes.get(tuple())
 free_space = 70000000 - used_space
 delete_space = 30000000 - free_space
-print(min([s for s in dir_sizes.values() if s >= delete_space]))
+print(min(s for s in dir_sizes.values() if s >= delete_space))
