@@ -30,6 +30,16 @@ class Direction:
     def reverse(self) -> Direction:
         return self.turn_right().turn_right()
 
+# Directions with left and right turns
+UDLR_DIRECTIONS = {}
+UDLR_DIRECTIONS["U"] = Direction(name="U", delta=(0, -1), left_name="L", right_name="R",
+                                    directions=UDLR_DIRECTIONS)
+UDLR_DIRECTIONS["R"] = Direction(name="R", delta=(1, 0), left_name="U", right_name="D",
+                                    directions=UDLR_DIRECTIONS)
+UDLR_DIRECTIONS["D"] = Direction(name="D", delta=(0, 1), left_name="R", right_name="L",
+                                    directions=UDLR_DIRECTIONS)
+UDLR_DIRECTIONS["L"] = Direction(name="L", delta=(-1, 0), left_name="D", right_name="U",
+                                    directions=UDLR_DIRECTIONS)
 
 # Directions with left and right turns
 COMPASS_DIRECTIONS = {}
