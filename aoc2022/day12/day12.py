@@ -23,4 +23,3 @@ print(nx.shortest_path_length(graph, start, end))
 # Part 2
 all_path_lengths = nx.shortest_path_length(graph, target=end)
 print(min(all_path_lengths[start] for start in grid.find_cells('a') if start in all_path_lengths))
-
