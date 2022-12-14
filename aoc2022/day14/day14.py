@@ -30,20 +30,14 @@ def load_grid(lines):
 
 def drop_sand(grid: g.Grid, x, y):
     bottom = grid.get_bounds()[1][1]
-    while True:
-        if grid.get((x, y+1), '.') == '.':
-            y += 1
-        elif grid.get((x-1, y+1), '.') == '.':
-            y += 1
-            x -= 1
-        elif grid.get((x+1, y+1), '.') == '.':
-            y += 1
-            x += 1
+    while y < bottom:
+        c = next((c for c in [(x, y+1), (x-1, y+1), (x+1, y+1)] if grid.get(c, '.') == '.'), None)
+        if c:
+            x, y = c
         else:
             grid[(x, y)] = "O"
             return False
-        if y > bottom:
-            return True
+    return True
 
 
 # Part 1
