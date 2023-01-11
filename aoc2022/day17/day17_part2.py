@@ -2,6 +2,7 @@
 # To get to 10^12 shapes takes N cycles (of height N*2768) + the height of 10^12-1755*N additional shapes == 2734
 # Calculations:
 
+# See debug output added to part 1 code for these values
 cycle_shapes = 5265 - 3510
 cycle_height = 8270 - 5502
 
@@ -15,7 +16,7 @@ additional_shapes = 10**12 - cycle_shapes*N
 print(f"Requires {additional_shapes} additional shapes")
 
 height_of_N_cycles = N*2768
-height_of_additional_shapes = 2194
+height_of_additional_shapes = 2194  # see debug output added to part 1 code
 
 total_height = height_of_N_cycles + height_of_additional_shapes
 print(total_height)
