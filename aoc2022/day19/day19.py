@@ -80,10 +80,6 @@ def get_best_costs(robot_costs, minutes):
     for minute in range(0, minutes):
         states = get_next_states(robot_costs, states)
 
-        # Optimisation: discard any states with fewer geodes than the max
-        max_geodes = max(items[GEODE] for robots, items in states)
-        # states = {(robots, items) for robots, items in states if items[GEODE] == max_geodes}
-
         # Optimisation: if there are more items of a type than we can possibly use in the remaining time, set to the max
         # This helps deduplicate the number of states
         minutes_remaining = minutes - minute
@@ -108,7 +104,8 @@ def get_best_costs(robot_costs, minutes):
             for items in all_items:
                 states.add((robots, items))
 
-        print(f"After minute {minute}: {max_geodes} geodes opened with {len(states)} states to progress")
+        max_geodes = max(items[GEODE] for robots, items in states)
+        # print(f"After minute {minute}: {max_geodes} geodes opened with {len(states)} states to progress")
 
     return max_geodes
 
