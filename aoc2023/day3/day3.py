@@ -41,7 +41,7 @@ star_adjacent_locations = [(star, direction.move(star))
 star_adjacent_numbers = {(star, number_locations[l])
                          for star, l in star_adjacent_locations
                          if l in number_locations}
-numbers_grouped_by_adjacent_star = {star: [n for _, n in numbers]
-                                    for star, numbers in itertools.groupby(sorted(star_adjacent_numbers), lambda n: n[0])}
-number_pairs = [numbers for numbers in numbers_grouped_by_adjacent_star.values() if len(numbers) == 2]
-print(sum(n1 * n2 for (_, n1), (_, n2) in number_pairs))
+numbers_grouped_by_adjacent_star = [[number for star, (location, number) in numbers]
+                                    for star, numbers in itertools.groupby(sorted(star_adjacent_numbers), lambda n: n[0])]
+number_pairs = [numbers for numbers in numbers_grouped_by_adjacent_star if len(numbers) == 2]
+print(sum(n1 * n2 for n1, n2 in number_pairs))
