@@ -40,7 +40,7 @@ star_adjacent_locations = [(star, direction.move(star))
                            for direction in d.COMPASS_DIRECTIONS_8.values()]
 star_adjacent_numbers = {(star, number_locations[l])
                          for star, l in star_adjacent_locations
-                         if l in number_locations.keys()}
+                         if l in number_locations}
 numbers_grouped_by_adjacent_star = {star: [n for _, n in numbers]
                                     for star, numbers in itertools.groupby(sorted(star_adjacent_numbers), lambda n: n[0])}
 number_pairs = [numbers for numbers in numbers_grouped_by_adjacent_star.values() if len(numbers) == 2]
