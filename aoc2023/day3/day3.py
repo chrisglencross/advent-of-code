@@ -13,13 +13,13 @@ digit_locations = {l for ls in digits.values() for l in ls}
 number_start_locations = {(x, y) for x, y in digit_locations if (x - 1, y) not in digit_locations}
 number_locations = {}
 for number_start_location in number_start_locations:
-    x, y = number_start_location
     number = 0
     number_digit_locations = []
-    while grid.get((x, y), '.') in "0123456789":
-        number_digit_locations.append((x, y))
-        number = 10 * number + int(grid[(x, y)])
-        x += 1
+    location = number_start_location
+    while location in digit_locations:
+        number_digit_locations.append(location)
+        number = 10 * number + int(grid[location])
+        location = (location[0]+1, location[1])
     for c in number_digit_locations:
         number_locations[c] = (number_start_location, number)
 
