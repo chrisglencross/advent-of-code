@@ -5,9 +5,9 @@ import itertools
 from aoc2023.modules import grid as g
 from aoc2023.modules import directions as d
 
-grid = g.load_grid("testinput.txt")
+grid = g.load_grid("input.txt")
 
-# Create index of coordinate -> number start location and value
+# For each digit create index of digit coordinate -> number start coordinate and number value
 digits = grid.index_repeating_cells("0123456789")
 digit_locations = {l for ls in digits.values() for l in ls}
 number_start_locations = {(x, y) for x, y in digit_locations if (x - 1, y) not in digit_locations}
