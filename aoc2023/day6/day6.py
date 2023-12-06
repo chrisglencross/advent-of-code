@@ -10,6 +10,7 @@ with open("input.txt") as f:
 
 
 # Number of integer values t where t^2 - Tt + D < 0
+# T is race time, D is race distance, t is time holding button
 def get_t_range(T, D):
     s = math.sqrt(T*T-4*D)
     t0 = (T-s)/2
@@ -21,8 +22,8 @@ def get_t_range(T, D):
 
 times = [int(t) for t in lines[0].split(":")[1].split()]
 distances = [int(d) for d in lines[1].split(":")[1].split()]
-print(functools.reduce(operator.mul, (get_t_range(t, d) for t, d in zip(times, distances))))
+print(functools.reduce(operator.mul, (get_t_range(T, D) for T, D in zip(times, distances))))
 
-t = int(lines[0].split(":")[1].replace(' ', ''))
-d = int(lines[1].split(":")[1].replace(' ', ''))
-print(get_t_range(t, d))
+T = int(lines[0].split(":")[1].replace(' ', ''))
+D = int(lines[1].split(":")[1].replace(' ', ''))
+print(get_t_range(T, D))
