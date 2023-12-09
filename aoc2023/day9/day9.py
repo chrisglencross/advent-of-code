@@ -7,7 +7,7 @@ def calculate_next(row):
     while not all(v == 0 for v in row):
         row = [v2 - v1 for v1, v2 in zip(row, row[1:])]
         rows.append(row)
-    return sum([row[-1] for row in reversed(rows)])
+    return sum([row[-1] for row in rows])
 
 
 with open("input.txt") as f:
