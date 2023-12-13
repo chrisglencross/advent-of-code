@@ -8,30 +8,25 @@ with open("input.txt") as f:
     grids = [g.parse_grid(s.strip()) for s in f.read().split("\n\n")]
 
 
+def get_x_reflect(grid, expected_mismatches):
+    for xr in range(0, grid.get_width()-1):
+        mismatches = 0
+        for x in range(0, xr+1):
+            for y in range(0, grid.get_height()):
+                r = grid.get((2*xr-x+1, y))
+                if r and not grid[(x, y)] == r:
+                    mismatches += 1
+        if mismatches == expected_mismatches:
+            return xr + 1
+    return 0
+
+
 def get_total(grids, expected_mismatches):
     total = 0
     for i, grid in enumerate(grids):
-
-        for xr in range(0, grid.get_width()-1):
-            mismatches = 0
-            for x in range(0, xr+1):
-                for y in range(0, grid.get_height()):
-                    r = grid.get((2*xr-x+1, y))
-                    if r and not grid[(x, y)] == r:
-                        mismatches += 1
-            if mismatches == expected_mismatches:
-                total += xr + 1
-
-        for yr in range(0, grid.get_height()-1):
-            mismatches = 0
-            for y in range(0, yr+1):
-                for x in range(0, grid.get_width()):
-                    r = grid.get((x, 2*yr-y+1))
-                    if r and not grid[(x, y)] == r:
-                        mismatches += 1
-            if mismatches == expected_mismatches:
-                total += (yr + 1) * 100
-
+        total += get_x_reflect(grid, expected_mismatches)
+        swapped_axis = grid.flip_y().rotate_cw()
+        total += get_x_reflect(swapped_axis, expected_mismatches) * 100
     return total
 
 
