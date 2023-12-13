@@ -6,8 +6,8 @@ def download_input(year, day):
 
     if os.path.exists("input.txt"):
         with open("input.txt") as f:
-            data = [line for line in f.readlines() if line]
-            if len(data) > 1 or not data[0].startswith("# Download input data"):
+            data = f.read()
+            if data and not data.startswith("# Download input data"):
                 return  # already downloaded
 
     url = f"https://adventofcode.com/{year}/day/{day}/input"

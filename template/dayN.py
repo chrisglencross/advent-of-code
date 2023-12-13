@@ -4,12 +4,12 @@
 
 import re
 
-import aoc2022.modules as aoc
+import aoc<YEAR>.modules as aoc
 aoc.download_input("<YEAR>", "<DAY>")
 
 with open("testinput.txt") as f:
     lines = [line.strip() for line in f.readlines()]
 
 for line in lines:
-    f1, f2 = re.match("^([0-9]+) @ ([0-9]+)$", line)
+    f1, f2 = re.match("^([0-9]+) @ ([0-9]+)$", line).groups()
 
