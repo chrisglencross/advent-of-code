@@ -9,7 +9,7 @@ from aoc2023.modules.directions import COMPASS_DIRECTIONS
 grid = g.load_grid("input.txt")
 
 
-def priority(state):
+def distance_from_origin(state):
     coords = state[0]
     return coords[0] + coords[1]
 
@@ -25,8 +25,9 @@ def solve(min_moves, max_moves):
     lowest_costs = {start_state: 0}
     lowest_end_cost = None
 
+    # Use a priority queue to solve near the origin first, reducing the number of suboptimal states created further away
     queue = PriorityQueue()
-    queue.put((priority(start_state), start_state))
+    queue.put((distance_from_origin(start_state), start_state))
 
     while not queue.empty():
         _, old_state = queue.get()
@@ -56,7 +57,7 @@ def solve(min_moves, max_moves):
                     (lowest_end_cost is None or new_cost < lowest_end_cost):
                 lowest_end_cost = new_cost
 
-            queue.put((priority(new_state), new_state))
+            queue.put((distance_from_origin(new_state), new_state))
         queue.task_done()
 
     return lowest_end_cost
