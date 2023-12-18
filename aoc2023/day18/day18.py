@@ -40,36 +40,36 @@ def measure_area(instructions):
 
     filled_region_total = 0
     corners = set()
-    for top_left, bottom_right in regions:
-        hlines_above = len([(y, x0, x1) for y, x0, x1 in hlines if x0 <= top_left[0] < x1 and y <= top_left[1]])
-        vlines_left = len([(x, y0, y1) for x, y0, y1 in vlines if y0 <= top_left[1] < y1 and x <= top_left[0]])
+    for (rx0, ry0), (rx1, ry1) in regions:
+        hlines_above = sum([1 for y, x0, x1 in hlines if x0 <= rx0 < x1 and y <= ry0])
+        vlines_left = sum([1 for x, y0, y1 in vlines if y0 <= ry0 < y1 and x <= rx0])
 
         if hlines_above % 2 == 1 and vlines_left % 2 == 1:
 
             # This rectangle is inside the boundary of the shape
 
             # Rectangle coordinates are inclusive top/left exclusive bottom/right
-            # If there is a boundary touching the bottom/right of this region we need to be inclusive
-            vline_on_right = any([(x, y0, y1) for x, y0, y1 in vlines if y0 <= top_left[1] < y1 and x == bottom_right[0]])
-            hline_on_left = any([(y, x0, x1) for y, x0, x1 in hlines if x0 <= top_left[0] < x1 and y == bottom_right[1]])
+            # If there is a boundary touching the bottom/right of this region we need to be inclusive of that
+            boundary_on_right = any([True for x, y0, y1 in vlines if y0 <= ry0 < y1 and x == rx1])
+            boundary_on_bottom = any([True for y, x0, x1 in hlines if x0 <= rx0 < x1 and y == ry1])
 
             # If there is a concave bottom/right corner on the boundary we will double count it to the bottom/left of
             # one region and to the top/right of another. Deduplicate these corners.
             overlapped_corners = 0
 
-            width = bottom_right[0] - top_left[0]
-            if vline_on_right:
+            width = rx1 - rx0
+            if boundary_on_right:
                 width += 1
-                bottom_left_corner = (bottom_right[0], top_left[1])
-                overlapped_corners += 1 if bottom_left_corner in corners else 0
-                corners.add(bottom_left_corner)
-
-            height = bottom_right[1] - top_left[1]
-            if hline_on_left:
-                height += 1
-                top_right_corner = (top_left[0], bottom_right[1])
+                top_right_corner = (rx1, ry0)
                 overlapped_corners += 1 if top_right_corner in corners else 0
                 corners.add(top_right_corner)
+
+            height = ry1 - ry0
+            if boundary_on_bottom:
+                height += 1
+                bottom_left_corner = (rx0, ry1)
+                overlapped_corners += 1 if bottom_left_corner in corners else 0
+                corners.add(bottom_left_corner)
 
             filled_region_total += width * height - overlapped_corners
 
