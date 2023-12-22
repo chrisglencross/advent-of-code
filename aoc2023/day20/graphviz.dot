@@ -1,0 +1,123 @@
+digraph G {
+
+bd -> lg, cm
+broadcaster -> ct, hr, ft, qm
+bh -> lj
+zz -> th, hr, jk, bh, js
+js -> cl
+cl -> rx
+rn -> ml
+ks -> xk, kd
+cm -> jp, sk, ft, dt, gb
+gk -> qv, kd
+lg -> cm
+qd -> jp, cm
+jk -> fs
+vq -> qj, kd
+lj -> cx, zz
+th -> bh
+rp -> bk, cm
+xk -> nv, kd
+qv -> ks
+mj -> xg, mh
+lh -> zz, pz
+mh -> ct, qs, vs, vk, pg
+kb -> hv, kd
+pg -> lz
+qm -> kb, kd
+pc -> cm, xl
+hv -> kd, rn
+fr -> fl, mh
+mp -> zz
+xl -> cm, gb
+tp -> mh
+gb -> rp
+pz -> mf, zz
+qn -> cm, sk
+fl -> tp, mh
+zq -> th, zz
+sk -> qd
+tk -> mh, vk
+bk -> bd, cm
+ml -> gk
+jg -> fr, mh
+nv -> vq, kd
+xg -> mh, vs
+hr -> zz, zq
+vk -> jg
+qj -> kd
+qs -> cl
+cx -> jk, zz
+mf -> mp, zz
+dt -> cl
+lz -> tk, mh
+vs -> pg
+ct -> mh, mj
+jp -> pc
+ft -> qn, cm
+fs -> zz, lh
+kd -> qm, ml, ts, qv, rn
+ts -> cl
+
+  broadcaster [shape=Mdiamond];
+  rx [shape=Msquare];
+  bd [shape=Mtriangle]
+bh [shape=Mtriangle] 
+zz [shape=Mcircle] 
+js [shape=Mcircle] 
+cl [shape=Mcircle] 
+rn [shape=Mtriangle] 
+ks [shape=Mtriangle] 
+cm [shape=Mcircle] 
+gk [shape=Mtriangle] 
+lg [shape=Mtriangle] 
+qd [shape=Mtriangle] 
+jk [shape=Mtriangle] 
+vq [shape=Mtriangle] 
+lj [shape=Mtriangle] 
+th [shape=Mtriangle] 
+rp [shape=Mtriangle] 
+xk [shape=Mtriangle] 
+qv [shape=Mtriangle] 
+mj [shape=Mtriangle] 
+lh [shape=Mtriangle] 
+mh [shape=Mcircle] 
+kb [shape=Mtriangle] 
+pg [shape=Mtriangle] 
+qm [shape=Mtriangle] 
+pc [shape=Mtriangle] 
+hv [shape=Mtriangle] 
+fr [shape=Mtriangle] 
+mp [shape=Mtriangle] 
+xl [shape=Mtriangle] 
+tp [shape=Mtriangle] 
+gb [shape=Mtriangle] 
+pz [shape=Mtriangle] 
+qn [shape=Mtriangle] 
+fl [shape=Mtriangle] 
+zq [shape=Mtriangle] 
+sk [shape=Mtriangle] 
+tk [shape=Mtriangle] 
+bk [shape=Mtriangle] 
+ml [shape=Mtriangle] 
+jg [shape=Mtriangle] 
+nv [shape=Mtriangle] 
+xg [shape=Mtriangle] 
+hr [shape=Mtriangle] 
+vk [shape=Mtriangle] 
+qj [shape=Mtriangle] 
+qs [shape=Mcircle] 
+cx [shape=Mtriangle] 
+mf [shape=Mtriangle] 
+dt [shape=Mcircle] 
+lz [shape=Mtriangle] 
+vs [shape=Mtriangle] 
+ct [shape=Mtriangle] 
+jp [shape=Mtriangle] 
+ft [shape=Mtriangle] 
+fs [shape=Mtriangle] 
+kd [shape=Mcircle] 
+ts [shape=Mcircle] 
+
+
+}
