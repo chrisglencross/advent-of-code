@@ -31,17 +31,17 @@ print(len(longest_path)-1)
 
 # Part 2
 
-def simplify_node(graph, from_node):
-    to_nodes = list(graph[from_node])
+def simplify_node(graph, node):
+    to_nodes = list(graph[node])
     if len(to_nodes) == 2:
         node1 = to_nodes[0]
         node2 = to_nodes[1]
-        d1 = graph.get_edge_data(from_node, node1)["distance"]
-        d2 = graph.get_edge_data(from_node, node2)["distance"]
-        graph.remove_edge(from_node, node1)
-        graph.remove_edge(from_node, node2)
+        d1 = graph.get_edge_data(node, node1)["distance"]
+        d2 = graph.get_edge_data(node, node2)["distance"]
+        graph.remove_edge(node, node1)
+        graph.remove_edge(node, node2)
         graph.add_edge(node1, node2, distance=d1 + d2)
-        graph.remove_node(from_node)
+        graph.remove_node(node)
 
 
 def simplify_graph(graph):
