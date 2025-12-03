@@ -1,6 +1,6 @@
 import os
 
-year = "2023"
+year = "2025"
 dir = f"aoc{year}"
 if not os.path.exists(f"{dir}"):
     os.mkdir(f"{dir}")
@@ -12,7 +12,7 @@ def ensure_file(filename, contents):
             of.write(contents)
 
 
-for day in range(1, 26):
+for day in range(1, 12):
     d = f"{dir}/day{day}"
     if not os.path.exists(d):
         print(f"Creating {d}")
