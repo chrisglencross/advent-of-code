@@ -11,7 +11,7 @@ with open("input.txt") as f:
     blocks = [block.strip() for block in f.read().replace('\r', '').split('\n\n')]
 
 def ranges_containing(ranges, value):
-    return [(l, h) for l, h in ranges if l <= value <= h]
+    return [r for r in ranges if r[0] <= value <= r[1]]
 
 def ranges_contained_by(ranges, other):
     return [r for r in ranges if r[0] >= other[0] and r[1] <= other[1]]
