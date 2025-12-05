@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # Advent of code 2025 day 5
 # See https://adventofcode.com/2025/day/5
+import functools
 
 import aoc2025.modules as aoc
 
@@ -12,17 +13,15 @@ with open("input.txt") as f:
 def ranges_containing(ranges, value):
     return [(l, h) for l, h in ranges if l <= value <= h]
 
-def ranges_contained_by(ranges, l0, h0):
-    return [(l, h) for l, h in ranges if l >= l0 and h <= h0]
+def ranges_contained_by(ranges, other):
+    return [r for r in ranges if r[0] >= other[0] and r[1] <= other[1]]
 
 def merge(ranges):
     result = set()
     for new_range in ranges:
-        l, h = new_range
-        overlapping = ranges_containing(result, l) + ranges_containing(result, h) + ranges_contained_by(result, l, h)
+        overlapping = ranges_containing(result, new_range[0]) + ranges_containing(result, new_range[1]) + ranges_contained_by(result, new_range)
         result.difference_update(overlapping)
-        for old_range in overlapping:
-            new_range = (min(old_range[0], new_range[0]), max(old_range[1], new_range[1]))
+        new_range = functools.reduce(lambda r0, r1: (min(r0[0], r1[0]), max(r0[1], r1[1])), overlapping, new_range)
         result.add(new_range)
     return result
 
