@@ -16,7 +16,7 @@ def rectangle_area(c0, c1):
 print("Part 1:", max(rectangle_area(c0, c1)
                      for c0, c1 in itertools.permutations(coords, 2)))
 
-# Vertical and horizontal edges of rectangles
+# Vertical and horizontal edges of border
 v_edges= []
 h_edges = []
 for c0, c1 in itertools.pairwise(coords + coords[0:1]):
