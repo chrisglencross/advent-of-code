@@ -30,14 +30,14 @@ def is_fully_solved(equations):
     return all(len(eq[0]) == 1 for eq in equations)
 
 def partially_solve(equations):
-    simplified = True
-    while simplified:
-        simplified = False
+    done = False
+    while not done:
+        done = True
         for i0, (b0, j0) in enumerate(equations):
             for i1, (b1, j1) in enumerate(equations):
                 if i0 != i1 and b1 and b1.issubset(b0):
                     equations[i0] = (b0 - b1, j0 - j1)
-                    simplified = True
+                    done = False
         equations = [eq for eq in equations if eq[0]]
     return equations
 
