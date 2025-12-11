@@ -3,7 +3,6 @@
 # See https://adventofcode.com/2025/day/10
 import itertools
 import re
-from dataclasses import replace
 
 import aoc2025.modules as aoc
 aoc.download_input("2025", "10")
