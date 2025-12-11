@@ -11,44 +11,35 @@ aoc.download_input("2025", "10")
 with open("input.txt") as f:
     lines = [line.strip() for line in f.readlines()]
 
-def simplify_equations(equations):
-    result = list(equations)
-    more = True
-    while more:
-        more = False
-        for i0, (c0, r0) in enumerate(list(result)):
-            for i1, (c1, r1) in enumerate(result):
-                if i0 != i1 and c1 and c1.issubset(c0):
-                    cs = c0 - c1
-                    rs = r0 - r1
-                    result[i0] = (cs, rs)
-                    more = True
-    return [(c, r) for c, r in result if c]
+def get_equations(buttons, target_joltages):
+    return [
+        ({button for button in buttons if joltage_no in button}, target_joltage)
+        for joltage_no, target_joltage in enumerate(target_joltages)
+    ]
 
-def substitute_equations(equations, known_button_presses):
+def substitute_equation_value(equations, button, presses):
     substituted = []
-    for eq_buttons, total_presses in equations:
-        unknown_buttons = {b for b in eq_buttons if b not in known_button_presses.keys()}
-        known_presses = sum(kv for kb, kv in known_button_presses.items() if kb in eq_buttons)
-        remaining_presses = total_presses - known_presses
-        if unknown_buttons:
-            substituted.append((unknown_buttons, remaining_presses))
-    for button, presses in known_button_presses.items():
-        substituted.append(({button}, presses))
+    for eq_buttons, eq_presses in equations:
+        remaining_buttons = {b for b in eq_buttons if b != button}
+        remaining_presses = eq_presses - presses if button in eq_buttons else eq_presses
+        substituted.append((remaining_buttons, remaining_presses))
+    substituted.append(({button}, presses))
     return simplify_equations(substituted)
-
-def get_possible_presses(button, equations):
-    min_result = None
-    for eq_buttons, total_presses in equations:
-        if button in eq_buttons:
-            if len(eq_buttons) == 1:
-                return total_presses, total_presses
-            if min_result is None or min_result > total_presses:
-                min_result = total_presses
-    return min_result, 1
 
 def is_fully_substituted(equations):
     return all(len(eq[0]) == 1 for eq in equations)
+
+def simplify_equations(equations):
+    simplified = True
+    while simplified:
+        simplified = False
+        for i0, (b0, j0) in enumerate(equations):
+            for i1, (b1, j1) in enumerate(equations):
+                if i0 != i1 and b1 and b1.issubset(b0):
+                    equations[i0] = (b0 - b1, j0 - j1)
+                    simplified = True
+        equations = [eq for eq in equations if eq[0]]
+    return equations
 
 def is_correct_solution(equations, target_joltage):
     joltage = [0] * len(target_joltage)
@@ -58,63 +49,52 @@ def is_correct_solution(equations, target_joltage):
                 joltage[counter] += presses
     return joltage == target_joltage
 
-def solve(buttons, equations, depth, target_joltage):
+def get_button_press_range(button, equations):
+    result = None
+    for eq_buttons, total_presses in equations:
+        if button in eq_buttons:
+            if len(eq_buttons) == 1:
+                return total_presses, total_presses  # Calculated this value already
+            if result is None or result[1] > total_presses:
+               result = 0, total_presses
+    return result
+
+def solve(buttons, equations, target_joltage):
 
     if any(eq[1] < 0 for eq in equations):
-        return None
+        return None  # A value we guessed at caused another value to be calculated as negative
 
     if is_fully_substituted(equations):
-        if is_correct_solution(equations, target_joltage):
-            return equations
-        else:
-            return None
+        return equations if is_correct_solution(equations, target_joltage) else None
 
-    button = buttons[0]
-    rest = buttons[1:]
-    max_presses, min_presses = get_possible_presses(button, equations)
-    if max_presses is not None:
-        best_solution_equation = None
-        best_solution_presses = None
-        for presses in range(max_presses, min_presses-1, -1):
-            next_equations = substitute_equations(equations, {button: presses})
-            solution_equation = solve(rest, next_equations, depth+1, target_joltage)
-            if solution_equation is not None:
-                solution_presses = sum(eq[1] for eq in solution_equation)
-                if best_solution_presses is None or solution_presses < best_solution_presses:
-                    best_solution_presses = solution_presses
-                    best_solution_equation = solution_equation
-        return best_solution_equation
-
+    button, remaining_buttons = buttons[0], buttons[1:]
+    press_range = get_button_press_range(button, equations)
+    if press_range:
+        possible_solutions = [solution
+                              for solution in [solve(remaining_buttons, substitute_equation_value(equations, button, presses), target_joltage)
+                              for presses in range(press_range[1], press_range[0]-1, -1)]
+                              if solution]
+        if possible_solutions:
+            return min(possible_solutions, key=lambda solution: sum(eq[1] for eq in solution))
     return None
-
-
-def get_equations(buttons, target_joltages):
-    result = []
-    for i, target_joltage in enumerate(target_joltages):
-        one_coefficients = set()
-        for button_no, button in enumerate(buttons):
-            if i in button:
-                one_coefficients.add(button_no)
-        result.append((one_coefficients, target_joltage))
-    return [({buttons[button_id] for button_id in c}, r) for c, r in result if c]
 
 
 part2 = 0
 for line in lines:
+    print(line)
     lights, buttons_str, joltage_str = re.match("^\[(.+)] (\(.+\) )+\{(.+)}$", line).groups()
 
     buttons = [tuple([int(i) for i in toggle_set_str.split(",")]) for toggle_set_str in buttons_str.strip().replace("(", "").replace(")", "").split(" ")]
     target_joltage = [int(j) for j in joltage_str.split(",")]
 
     # Equations are (c0 + c1 + cN) = total where cN is the number of button pushes of button index N
-    # Simplify simultaneous equations to find some known values of cN
     equations = get_equations(buttons, target_joltage)
     equations = simplify_equations(equations)
 
+    # Sort buttons so we select values with the fewest options first
     buttons.sort(key=lambda b: min((eq[1], 0-len(b)) for eq in equations if b in eq[0]))
-    solution = solve(buttons, equations, 0, target_joltage)
-    presses = sum(eq[1] for eq in solution)
-    print(f"  => Solution is {presses} presses: {solution}")
-    part2 += presses
+
+    solution = solve(buttons, equations, target_joltage)
+    part2 += sum(eq[1] for eq in solution)
 
 print(part2)
