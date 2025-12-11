@@ -41,7 +41,7 @@ def partially_solve(equations):
         equations = [eq for eq in equations if eq[0]]
     return equations
 
-def is_valid_solution(equations, target_joltage):
+def is_correct_solution(equations, target_joltage):
     joltage = [0] * len(target_joltage)
     for buttons, presses in equations:
         for button in buttons:
@@ -65,7 +65,7 @@ def find_best_solution(buttons, equations, target_joltage):
         return None  # A value we guessed at caused another value to be calculated as negative
 
     if is_fully_solved(equations):
-        return equations if is_valid_solution(equations, target_joltage) else None
+        return equations if is_correct_solution(equations, target_joltage) else None
 
     button, *rest = buttons
     press_range = get_button_press_range(button, equations)
@@ -88,7 +88,7 @@ def part2():
         buttons = [tuple([int(i) for i in toggle_set_str.split(",")]) for toggle_set_str in buttons_str.strip().replace("(", "").replace(")", "").split(" ")]
         target_joltage = [int(j) for j in joltage_str.split(",")]
 
-        # Equations are ({buttons}, total) where total is the sum of how many times the buttons in that set need to be pressed
+        # equations is a list of ({buttons}, total) where total is the sum of how many times the buttons in the set need to be pressed
         equations = get_equations(buttons, target_joltage)
         equations = partially_solve(equations)
 
