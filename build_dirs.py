@@ -12,7 +12,7 @@ def ensure_file(filename, contents):
             of.write(contents)
 
 
-for day in range(1, 12):
+for day in range(1, 13):
     d = f"{dir}/day{day}"
     if not os.path.exists(d):
         print(f"Creating {d}")

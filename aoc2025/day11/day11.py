@@ -10,10 +10,7 @@ aoc.download_input("2025", "11")
 with open("input.txt") as f:
     lines = [line.strip() for line in f.readlines()]
 
-tree = {}
-for line in lines:
-    f, t = line.split(": ")
-    tree[f] = t.split(" ")
+tree = {f: t.split(" ") for f, t in [line.split(": ") for line in lines]}
 
 @lru_cache
 def count_paths1(d):
@@ -21,7 +18,7 @@ def count_paths1(d):
         return 1
     return sum(count_paths1(nd) for nd in tree[d])
 
-@lru_cache(100000)
+@lru_cache(1000)
 def count_paths2(d, dac, fft):
     if d == "out":
         return 1 if dac and fft else 0
